@@ -18,9 +18,9 @@ tab_socket_backstop_h=0.75; // Thickness of the "bottom" of the screw socket, or
 tab_socket_backstop_hole_id=1; //.8*2; // Diameter of a smaller hole in the bottom of the socket, or 0 for none.
 
 pot_h=7;
-pot_shaft_hole_d=7.3;
-pot_major=13;
-pot_minor=12.5;
+pot_shaft_hole_d=7.2;
+pot_major=13.5;
+pot_minor=11;
 pot_position_r=screw_position_r + 1;
 pot_tab_major=25;
 pot_tab_fillet_r=4.675;
@@ -30,8 +30,10 @@ pot_wire_cut_w=8.5;
 pot_wire_cut_h=2.5;
 total_h=pot_h + 1;
 
-HAS_ATTITUDE=false;
-attitude_flat_distance_from_center=40.25-17;
+HAS_ATTITUDE=true;
+attitude_flat_distance_from_center=14.7;
+attitude_tab_minor=3;
+attitude_tab_major=18;
 
 _bezel_offset=(bezel_od-id)/2;
 _top_t=(od-bezel_od)/2;
@@ -124,7 +126,7 @@ module bezel_chamfer_cut(has_flat=false, flat_from_center=0, flat_chamfer_depth=
     }
 }
 
-attitude_pot_wire_cut_major=48;
+attitude_pot_wire_cut_major=30;
 attitude_pot_wire_cut_minor=pot_minor;
 
 module main_bezel() {
@@ -132,9 +134,18 @@ module main_bezel() {
         union() {
             cylinder(d=od, h=total_h);
             outer_additions();
+            if (HAS_ATTITUDE) {
+                intersection() {
+                    difference() {
+                        translate([0,-attitude_tab_minor, 0]) cylinder(d=od, h=_tab_base_h);
+                        translate([0,0,-NOTHING]) cylinder(d=od, h=_tab_base_h+2*NOTHING);
+                    }
+                    translate([-attitude_tab_major/2, -od/2-attitude_tab_minor-NOTHING, -NOTHING]) cube([attitude_tab_major, attitude_tab_minor+od/2, _tab_base_h+2*NOTHING]);
+                }
+            }
         }
         if (HAS_ATTITUDE) {
-            bezel_chamfer_cut(has_flat=true, flat_from_center=attitude_flat_distance_from_center, flat_chamfer_depth=3);
+            bezel_chamfer_cut(has_flat=true, flat_from_center=attitude_flat_distance_from_center, flat_chamfer_depth=2);
             translate([0,-attitude_flat_distance_from_center - (od/2-attitude_flat_distance_from_center)/2,0]) union() {
                 pot_cut();
                 translate([-attitude_pot_wire_cut_major/2, -attitude_pot_wire_cut_minor/2, -NOTHING]) cube([
