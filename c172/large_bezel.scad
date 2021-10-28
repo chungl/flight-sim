@@ -1,4 +1,4 @@
-NUM_OUTER_POTS=2;
+NUM_OUTER_POTS=0;
 
 id=36.25*2;
 bezel_od=39.5*2;
@@ -29,6 +29,9 @@ pot_tab_minor= 2*(pot_position_r - _or + _pot_tab_circle_overlap);
 pot_wire_cut_w=8.5;
 pot_wire_cut_h=2.5;
 total_h=pot_h + 1;
+
+HAS_ATTITUDE=true;
+attitude_flat_distance_from_center=40.25-17;
 
 _tab_base_h=total_h-panel_thickness-bezel_height_above_panel;
 _tab_extension_l=screw_position_r-id/2;
@@ -62,16 +65,20 @@ module outer_pot_tab() {
     }
 }
 
+module pot_cut() {
+    // SENSOR SHAFT HOLE
+    if (!MODEL_SUPPORT_FOR_HANGING_CIRCLES) {
+        translate([0,0,-NOTHING]) cylinder(d=pot_shaft_hole_d, h=total_h+2*NOTHING);
+    } else {
+        translate([0,0,pot_h+SUPPORT_LAYER_H]) cylinder(d=pot_shaft_hole_d, h=total_h-SUPPORT_LAYER_H+NOTHING);
+    }
+    // SENSOR CAVITY
+    translate([-pot_major/2, -pot_minor/2, -NOTHING]) cube([pot_major, pot_minor, pot_h]);
+}
+
 module outer_pot_cut() {
     rotate([0,0,-90]) translate([0, pot_position_r, 0]) union() {
-        // SENSOR SHAFT HOLE
-        if (!MODEL_SUPPORT_FOR_HANGING_CIRCLES) {
-            translate([0,0,-NOTHING]) cylinder(d=pot_shaft_hole_d, h=total_h+2*NOTHING);
-        } else {
-            translate([0,0,pot_h+SUPPORT_LAYER_H]) cylinder(d=pot_shaft_hole_d, h=total_h-SUPPORT_LAYER_H+NOTHING);
-        }
-        // SENSOR CAVITY
-        translate([-pot_major/2, -pot_minor/2, -NOTHING]) cube([pot_major, pot_minor, pot_h]);
+        pot_cut();
         // WIRE CAVITY
         translate([-pot_tab_major/2-NOTHING, -pot_wire_cut_w/2, -NOTHING]) cube([pot_tab_major + 2*NOTHING, pot_wire_cut_w, pot_wire_cut_h]);
     }
@@ -102,11 +109,40 @@ module outer_cuts() {
     }
 }
 
+module bezel_chamfer_cut(has_flat=false, flat_from_center=0, flat_chamfer_depth=total_h) {
+    difference() {
+        translate([0,0,-NOTHING]) cylinder(d1=id, d2=bezel_od, h=total_h+2*NOTHING);
+        if (has_flat) {
+            echo(atan((bezel_od-id)/total_h));
+            translate([0,-flat_from_center,total_h-flat_chamfer_depth]) union() {
+                rotate([atan((bezel_od-id)/total_h),0,0]) translate([-od/2,-od,0]) cube([od, od, od]);
+                translate([-od/2, -od, -total_h]) cube([od, od, total_h]);
+            }
+        }
+    }
+}
+
+attitude_pot_wire_cut_major=48;
+attitude_pot_wire_cut_minor=pot_minor;
+
+
 difference() {
     union() {
         cylinder(d=od, h=total_h);
         outer_additions();
     }
-    translate([0,0,-NOTHING]) cylinder(d1=id, d2=bezel_od, h=total_h+2*NOTHING);
+    if (HAS_ATTITUDE) {
+        bezel_chamfer_cut(has_flat=true, flat_from_center=attitude_flat_distance_from_center, flat_chamfer_depth=3);
+        translate([0,-attitude_flat_distance_from_center - (od/2-attitude_flat_distance_from_center)/2,0]) union() {
+            pot_cut();
+            translate([-attitude_pot_wire_cut_major/2, -attitude_pot_wire_cut_minor/2, -NOTHING]) cube([
+                attitude_pot_wire_cut_major,
+                attitude_pot_wire_cut_minor,
+                pot_wire_cut_h+NOTHING
+            ]);
+        }
+    } else {
+        bezel_chamfer_cut();
+    }
     outer_cuts();
 }
