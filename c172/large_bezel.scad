@@ -33,6 +33,9 @@ total_h=pot_h + 1;
 HAS_ATTITUDE=true;
 attitude_flat_distance_from_center=40.25-17;
 
+_bezel_offset=(bezel_od-id)/2;
+_top_t=(od-bezel_od)/2;
+
 _tab_base_h=total_h-panel_thickness-bezel_height_above_panel;
 _tab_extension_l=screw_position_r-id/2;
 
@@ -113,9 +116,8 @@ module bezel_chamfer_cut(has_flat=false, flat_from_center=0, flat_chamfer_depth=
     difference() {
         translate([0,0,-NOTHING]) cylinder(d1=id, d2=bezel_od, h=total_h+2*NOTHING);
         if (has_flat) {
-            echo(atan((bezel_od-id)/total_h));
             translate([0,-flat_from_center,total_h-flat_chamfer_depth]) union() {
-                rotate([atan((bezel_od-id)/total_h),0,0]) translate([-od/2,-od,0]) cube([od, od, od]);
+                rotate([atan((_bezel_offset)/total_h),0,0]) translate([-od/2,-od,0]) cube([od, od, od]);
                 translate([-od/2, -od, -total_h]) cube([od, od, total_h]);
             }
         }
@@ -125,24 +127,50 @@ module bezel_chamfer_cut(has_flat=false, flat_from_center=0, flat_chamfer_depth=
 attitude_pot_wire_cut_major=48;
 attitude_pot_wire_cut_minor=pot_minor;
 
-
-difference() {
-    union() {
-        cylinder(d=od, h=total_h);
-        outer_additions();
-    }
-    if (HAS_ATTITUDE) {
-        bezel_chamfer_cut(has_flat=true, flat_from_center=attitude_flat_distance_from_center, flat_chamfer_depth=3);
-        translate([0,-attitude_flat_distance_from_center - (od/2-attitude_flat_distance_from_center)/2,0]) union() {
-            pot_cut();
-            translate([-attitude_pot_wire_cut_major/2, -attitude_pot_wire_cut_minor/2, -NOTHING]) cube([
-                attitude_pot_wire_cut_major,
-                attitude_pot_wire_cut_minor,
-                pot_wire_cut_h+NOTHING
-            ]);
+module main_bezel() {
+    difference() {
+        union() {
+            cylinder(d=od, h=total_h);
+            outer_additions();
         }
-    } else {
-        bezel_chamfer_cut();
+        if (HAS_ATTITUDE) {
+            bezel_chamfer_cut(has_flat=true, flat_from_center=attitude_flat_distance_from_center, flat_chamfer_depth=3);
+            translate([0,-attitude_flat_distance_from_center - (od/2-attitude_flat_distance_from_center)/2,0]) union() {
+                pot_cut();
+                translate([-attitude_pot_wire_cut_major/2, -attitude_pot_wire_cut_minor/2, -NOTHING]) cube([
+                    attitude_pot_wire_cut_major,
+                    attitude_pot_wire_cut_minor,
+                    pot_wire_cut_h+NOTHING
+                ]);
+            }
+        } else {
+            bezel_chamfer_cut();
+        }
+        outer_cuts();
     }
-    outer_cuts();
 }
+
+module partial_bezel(visible_to_cut=id, chamfer_depth=total_h) {
+    bottom_tab_major=10;
+    bottom_tab_minor=5;
+    union() {
+        difference() {
+            union() {
+                cylinder(d=od, h=total_h);
+                outer_additions();
+
+            }
+            bezel_chamfer_cut(has_flat=true, flat_from_center=visible_to_cut-id/2, flat_chamfer_depth=chamfer_depth);
+            outer_cuts();
+            translate([-od, 
+            -2*od-(visible_to_cut-id/2)
+            -_bezel_offset*chamfer_depth/total_h-_top_t, -NOTHING]) cube([2*od, 2*od, total_h+2*NOTHING]);
+        }
+        translate([-bottom_tab_major/2, 
+            -bottom_tab_minor-(visible_to_cut-id/2)
+            -_bezel_offset*chamfer_depth/total_h-_top_t, 0]) cube([bottom_tab_major,bottom_tab_minor, _tab_base_h]);
+    }
+}
+
+// Custom Tachometer
+partial_bezel(32);
