@@ -1,15 +1,15 @@
 NUM_OUTER_POTS=0;
 
-id=36.25*2;
-bezel_od=39.5*2;
-_or=40.25;
+id=24.5*2;
+bezel_od=27.75*2;
+_or=28.5;
 od=_or*2;
 
 // Total bezel height is divided into three regions: Tab (sits behind the panel), Embeded (in the panel), and Raised (above the panel).
 panel_thickness=5.3; // Thickness of the panel material (the Embeded portion of the bezel)
 bezel_height_above_panel=0; // For flush bezel, set this to 0.
 
-screw_position_r=45;
+screw_position_r=_or+4.75;
 screw_tab_w=10;
 screw_socket_od=3.15*2;
 screw_socket_id=1.5*2;
@@ -30,7 +30,7 @@ pot_wire_cut_w=8.5;
 pot_wire_cut_h=2.5;
 total_h=pot_h + 1;
 
-HAS_ATTITUDE=true;
+HAS_ATTITUDE=false;
 attitude_flat_distance_from_center=40.25-17;
 
 _bezel_offset=(bezel_od-id)/2;
@@ -173,4 +173,5 @@ module partial_bezel(visible_to_cut=id, chamfer_depth=total_h) {
 }
 
 // Custom Tachometer
-partial_bezel(32);
+// partial_bezel(32);
+main_bezel();
