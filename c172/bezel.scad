@@ -5,9 +5,10 @@ bezel_od=27.75*2;
 _or=28.5;
 od=_or*2;
 
+pot_h=10.8+0.75;
 // Total bezel height is divided into three regions: Tab (sits behind the panel), Embeded (in the panel), and Raised (above the panel).
 panel_thickness=5.3; // Thickness of the panel material (the Embeded portion of the bezel)
-bezel_height_above_panel=0; // For flush bezel, set this to 0.
+bezel_height_above_panel=pot_h-7; // For flush bezel, set this to 0.
 
 screw_position_r=_or+4.75;
 screw_tab_w=10;
@@ -17,10 +18,10 @@ screw_socket_h=3;
 tab_socket_backstop_h=0.75; // Thickness of the "bottom" of the screw socket, or 0 to disable.
 tab_socket_backstop_hole_id=1; //.8*2; // Diameter of a smaller hole in the bottom of the socket, or 0 for none.
 
-pot_h=7;
-pot_shaft_hole_d=7.2;
-pot_major=13.5;
-pot_minor=11;
+
+pot_shaft_hole_d=6.75;
+pot_major=7.5;
+pot_minor=7.5;
 pot_position_r=screw_position_r + 1;
 pot_tab_major=25;
 pot_tab_fillet_r=4.675;
@@ -41,7 +42,7 @@ _top_t=(od-bezel_od)/2;
 _tab_base_h=total_h-panel_thickness-bezel_height_above_panel;
 _tab_extension_l=screw_position_r-id/2;
 
-MODEL_SUPPORT_FOR_HANGING_CIRCLES=true;
+MODEL_SUPPORT_FOR_HANGING_CIRCLES=false;
 SUPPORT_LAYER_H=0.25;
 
 NOTHING=0.1;
@@ -183,6 +184,67 @@ module partial_bezel(visible_to_cut=id, chamfer_depth=total_h) {
     }
 }
 
+module fillet_90(r=1, h=10, a=0) {
+    rotate([0,0,a+180]) translate([-r, -r, 0]) difference() {
+        cube([r, r, h]);
+        cylinder(r=r, h=h);
+    }
+}
+
+module clock_profile() {
+    fillet_r=0.5;
+    lower_w=45.5;
+    lower_h=16.8;
+    upper_w=41.3;
+    upper_h=26.9-lower_h;
+    _z=1;
+    base_from_center=16.9-28.5;
+    projection() {
+        difference() {
+            union() {
+                translate([-lower_w/2, base_from_center, 0]) cube([lower_w, lower_h,_z]);
+                translate([-upper_w/2, base_from_center+lower_h, 0]) cube([upper_w, upper_h,_z]);
+                translate([-upper_w/2, base_from_center+lower_h, 0]) fillet_90(r=fillet_r, h=_z, a=90);
+                translate([upper_w/2, base_from_center+lower_h, 0]) fillet_90(r=fillet_r, h=_z, a=0);
+                
+            }
+            translate([-upper_w/2, base_from_center+lower_h+upper_h, 0]) fillet_90(r=fillet_r, h=_z, a=270);
+            translate([upper_w/2, base_from_center+lower_h+upper_h, 0]) fillet_90(r=fillet_r, h=_z, a=180);
+            translate([-lower_w/2, base_from_center+lower_h, 0]) fillet_90(r=fillet_r, h=_z, a=270);
+            translate([lower_w/2, base_from_center+lower_h, 0]) fillet_90(r=fillet_r, h=_z, a=180);
+            translate([-lower_w/2, base_from_center, 0]) fillet_90(r=fillet_r, h=_z, a=0);
+            translate([lower_w/2, base_from_center, 0]) fillet_90(r=fillet_r, h=_z, a=90);
+        }
+    }
+}
+
+module clock_cut() {
+    linear_extrude(height=total_h, scale=1+_bezel_offset/_or) clock_profile();
+}
+
+module clock_bezel() {
+    button_position_r=_or-6;
+    button_angles=[0,155,205];
+    difference() {
+        union() {
+            cylinder(d=od, h=total_h);
+            outer_additions();
+        }
+        clock_cut()
+        outer_cuts();
+        for (a = button_angles) {
+            rotate([0,0,a]) translate([0, button_position_r, 0]) union() {
+                pot_cut();
+                translate([-pot_major/2, pot_minor/2, 0]) cube([pot_major, _or-button_position_r, _tab_base_h]);
+            }
+        }
+    }
+}
+
+
+
+clock_bezel();
+
 // Custom Tachometer
 // partial_bezel(32);
-main_bezel();
+// main_bezel();
