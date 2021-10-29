@@ -185,25 +185,29 @@ module main_bezel(with_tabs=true, solid=false) {
     }
 }
 
-module partial_bezel(visible_to_cut=id, chamfer_depth=total_h) {
+module partial_bezel(visible_to_cut=id, chamfer_depth=total_h, with_tabs=true, solid=false) {
     bottom_tab_major=10;
     bottom_tab_minor=5;
     union() {
         difference() {
             union() {
                 cylinder(d=od, h=total_h);
-                outer_additions();
+                outer_additions(with_tabs);
 
             }
-            bezel_chamfer_cut(has_flat=true, flat_from_center=visible_to_cut-id/2, flat_chamfer_depth=chamfer_depth);
-            outer_cuts();
+            if (!solid) {
+                bezel_chamfer_cut(has_flat=true, flat_from_center=visible_to_cut-id/2, flat_chamfer_depth=chamfer_depth);
+                outer_cuts();
+            }
             translate([-od, 
             -2*od-(visible_to_cut-id/2)
             -_bezel_offset*chamfer_depth/total_h-_top_t, -NOTHING]) cube([2*od, 2*od, total_h+2*NOTHING]);
         }
-        translate([-bottom_tab_major/2, 
-            -bottom_tab_minor-(visible_to_cut-id/2)
-            -_bezel_offset*chamfer_depth/total_h-_top_t, 0]) cube([bottom_tab_major,bottom_tab_minor, _tab_base_h]);
+        if (with_tabs) {
+            translate([-bottom_tab_major/2, 
+                -bottom_tab_minor-(visible_to_cut-id/2)
+                -_bezel_offset*chamfer_depth/total_h-_top_t, 0]) cube([bottom_tab_major,bottom_tab_minor, _tab_base_h]);
+        }
     }
 }
 
@@ -347,9 +351,11 @@ module bezel_router_guide() {
 }
 
 
-bezel_router_guide() cylinder(d=od, h=guide_base_h);
+// STANDARD BEZELS WITH OPTIONAL EXTERNAL POTENTIOMETERS
+// main_bezel();
+// bezel_router_guide() cylinder(d=od, h=guide_base_h);
 // encoder_tab_router_guide();
 
-// Custom Tachometer
+// CUSTOM TACHOMETER (HALF INSTRUMENT)
 // partial_bezel(32);
-// main_bezel();
+bezel_router_guide() partial_bezel(32, with_tabs=false, solid=true);
