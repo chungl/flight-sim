@@ -1,9 +1,28 @@
-NUM_OUTER_POTS=0;
+NUM_OUTER_POTS=1;
 
-id=24.5*2;
-bezel_od=27.75*2;
-_or=28.5;
-od=_or*2;
+LARGE_BEZEL_CHAMFER_INNER_DIAMETER=36.25*2;
+LARGE_BEZEL_CHAMFER_OUTER_DIAMETER=39.5*2;
+LARGE_BEZEL_OUTER_DIAMETER=40.25*2;
+
+SMALL_BEZEL_CHAMFER_INNER_DIAMETER=24.5*2;
+SMALL_BEZEL_CHAMFER_OUTER_DIAMETER=27.75*2;
+SMALL_BEZEL_OUTER_DIAMETER=28.5*2;
+
+ENCODER_HEIGHT=7;
+ENCODER_MAJOR_WIDTH=13;
+ENCODER_MINOR_WIDTH=12.5;
+ENCODER_SHAFT_DIAMETER=7.3;
+
+BUTTON_HEIGHT=10.8+0.75;
+BUTTON_MAJOR_WIDTH=7.5;
+BUTTON_MINOR_WIDTH=7.5;
+BUTTON_SHAFT_DIAMETER=6.5;
+
+
+id=LARGE_BEZEL_CHAMFER_INNER_DIAMETER;
+bezel_od=LARGE_BEZEL_CHAMFER_OUTER_DIAMETER;
+od=LARGE_BEZEL_OUTER_DIAMETER;
+_or=od/2;
 
 pot_h=10.8+0.75;
 // Total bezel height is divided into three regions: Tab (sits behind the panel), Embeded (in the panel), and Raised (above the panel).
@@ -31,7 +50,7 @@ pot_wire_cut_w=8.5;
 pot_wire_cut_h=2.5;
 total_h=pot_h + 1;
 
-HAS_ATTITUDE=true;
+HAS_ATTITUDE=false;
 attitude_flat_distance_from_center=14.7;
 attitude_tab_minor=3;
 attitude_tab_major=18;
@@ -47,7 +66,7 @@ SUPPORT_LAYER_H=0.25;
 
 NOTHING=0.1;
 
-$fn=360;
+$fn=100;
 
 module screw_tab() {
     translate([screw_position_r, 0, 0]) difference() {
@@ -90,7 +109,7 @@ module outer_pot_cut() {
     }
 }
 
-module outer_additions() {
+module outer_additions(with_tabs=true) {
     rotate([0,0,-45]) union() {
         // POTS: 0, 1, or 2
         if (NUM_OUTER_POTS > 0) {
@@ -98,9 +117,11 @@ module outer_additions() {
                 rotate([0,0,-90*i]) outer_pot_tab();
             }
         }
-        // SCREWS: remaining positions
-        for (i= [NUM_OUTER_POTS : 3]) {
-            rotate([0,0,-90*i]) screw_tab();
+        if (with_tabs) {
+            // SCREWS: remaining positions
+            for (i= [NUM_OUTER_POTS : 3]) {
+                rotate([0,0,-90*i]) screw_tab();
+            }
         }
     }
 }
@@ -130,11 +151,11 @@ module bezel_chamfer_cut(has_flat=false, flat_from_center=0, flat_chamfer_depth=
 attitude_pot_wire_cut_major=30;
 attitude_pot_wire_cut_minor=pot_minor;
 
-module main_bezel() {
+module main_bezel(with_tabs=true, solid=false) {
     difference() {
         union() {
             cylinder(d=od, h=total_h);
-            outer_additions();
+            outer_additions(with_tabs);
             if (HAS_ATTITUDE) {
                 intersection() {
                     difference() {
@@ -145,20 +166,22 @@ module main_bezel() {
                 }
             }
         }
-        if (HAS_ATTITUDE) {
-            bezel_chamfer_cut(has_flat=true, flat_from_center=attitude_flat_distance_from_center, flat_chamfer_depth=2);
-            translate([0,-attitude_flat_distance_from_center - (od/2-attitude_flat_distance_from_center)/2,0]) union() {
-                pot_cut();
-                translate([-attitude_pot_wire_cut_major/2, -attitude_pot_wire_cut_minor/2, -NOTHING]) cube([
-                    attitude_pot_wire_cut_major,
-                    attitude_pot_wire_cut_minor,
-                    pot_wire_cut_h+NOTHING
-                ]);
+        if (!solid) {
+            if (HAS_ATTITUDE) {
+                bezel_chamfer_cut(has_flat=true, flat_from_center=attitude_flat_distance_from_center, flat_chamfer_depth=2);
+                translate([0,-attitude_flat_distance_from_center - (od/2-attitude_flat_distance_from_center)/2,0]) union() {
+                    pot_cut();
+                    translate([-attitude_pot_wire_cut_major/2, -attitude_pot_wire_cut_minor/2, -NOTHING]) cube([
+                        attitude_pot_wire_cut_major,
+                        attitude_pot_wire_cut_minor,
+                        pot_wire_cut_h+NOTHING
+                    ]);
+                }
+            } else {
+                bezel_chamfer_cut();
             }
-        } else {
-            bezel_chamfer_cut();
+            outer_cuts();
         }
-        outer_cuts();
     }
 }
 
@@ -241,9 +264,69 @@ module clock_bezel() {
     }
 }
 
+router_guide_d=60.34;
+bit_d=3.2;
+router_offset_r=(router_guide_d-bit_d)/2;
+module router_offset(h=5) {
+    minkowski() {
+        linear_extrude(height=h) projection(cut=false) children(0);
+        cylinder(r=router_offset_r, h=h);
+    }
+}
+fence_t=5;
+module router_fence(fence_h=3, solid=false) {
+    difference() {
+        minkowski() {
+            router_offset(fence_h/2) children(0);
+            cylinder(r=fence_t, h=fence_h/2);
+        }
+        if (!solid) {
+            translate([0,0,-NOTHING]) router_offset(fence_h+2*NOTHING) children(0);
+        }
+    }
+}
 
+//  router_fence() outer_pot_tab();
+//  color("orange") router_offset() outer_pot_tab();
+//  color("white") translate([0,0,5]) outer_pot_tab();
 
-clock_bezel();
+guide_base_h=4;
+guide_r=5;
+etch_depth=0.25;
+countersink_h=2.5;
+countersink_d=6;
+module encoder_tab_router_guide() {
+    difference() {
+        union() {
+            color("purple") hull() {
+                translate([0,screw_position_r, 0]) cylinder(r=guide_r,h=guide_base_h);
+                translate([0,-screw_position_r, 0]) cylinder(r=guide_r,h=guide_base_h);
+                translate([screw_position_r, 0, 0]) cylinder(r=guide_r,h=guide_base_h);
+            }
+
+            // router_fence() outer_pot_tab();
+            color("purple") minkowski() {
+                linear_extrude(height=guide_base_h/2) projection() outer_pot_tab();
+                cylinder(r=guide_r+fence_t+router_offset_r, h=guide_base_h/2);
+            }
+            translate([0,0,guide_base_h]) router_fence() outer_pot_tab();
+        }
+        outer_pot_tab();
+        translate([0,0, guide_base_h-etch_depth]) difference() {
+            cylinder(d=od, h=etch_depth);
+            cylinder(d=id, h=etch_depth);
+        }
+        translate([0,screw_position_r, -NOTHING]) cylinder(d=screw_socket_id, h=guide_base_h+2*NOTHING);
+        translate([0,screw_position_r, guide_base_h-countersink_h]) cylinder(d=countersink_d, h=countersink_h+NOTHING);
+        translate([0,-screw_position_r, -NOTHING]) cylinder(d=screw_socket_id, h=guide_base_h+2*NOTHING);
+        translate([0,-screw_position_r, guide_base_h-countersink_h]) cylinder(d=countersink_d, h=countersink_h+NOTHING);
+        translate([od/3,0, -NOTHING]) cylinder(d=screw_socket_id, h=guide_base_h+2*NOTHING);
+        translate([od/3,0, guide_base_h-countersink_h]) cylinder(d=countersink_d, h=countersink_h+NOTHING);
+        translate([0,0, guide_base_h-etch_depth]) linear_extrude(height=etch_depth+NOTHING) text("2", valign="center", halign="center");
+    }
+}
+
+encoder_tab_router_guide();
 
 // Custom Tachometer
 // partial_bezel(32);
