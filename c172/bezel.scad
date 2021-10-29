@@ -295,6 +295,12 @@ guide_r=5;
 etch_depth=0.25;
 countersink_h=2.5;
 countersink_d=6;
+
+module router_guide_screw_countersink_cut(hole_d=screw_socket_id, countersink_d=countersink_d, countersink_depth=countersink_h, material_thickness=guide_base_h) {
+    translate([0,0,material_thickness-countersink_depth]) cylinder(d=countersink_d, h=countersink_depth+NOTHING);
+    translate([0,0,-NOTHING]) cylinder(d=hole_d, h=material_thickness-countersink_depth+2*NOTHING);
+}
+
 module encoder_tab_router_guide() {
     difference() {
         union() {
@@ -316,17 +322,33 @@ module encoder_tab_router_guide() {
             cylinder(d=od, h=etch_depth);
             cylinder(d=id, h=etch_depth);
         }
-        translate([0,screw_position_r, -NOTHING]) cylinder(d=screw_socket_id, h=guide_base_h+2*NOTHING);
-        translate([0,screw_position_r, guide_base_h-countersink_h]) cylinder(d=countersink_d, h=countersink_h+NOTHING);
-        translate([0,-screw_position_r, -NOTHING]) cylinder(d=screw_socket_id, h=guide_base_h+2*NOTHING);
-        translate([0,-screw_position_r, guide_base_h-countersink_h]) cylinder(d=countersink_d, h=countersink_h+NOTHING);
-        translate([od/3,0, -NOTHING]) cylinder(d=screw_socket_id, h=guide_base_h+2*NOTHING);
-        translate([od/3,0, guide_base_h-countersink_h]) cylinder(d=countersink_d, h=countersink_h+NOTHING);
+        translate([0,screw_position_r, 0]) router_guide_screw_countersink_cut();
+        translate([0,-screw_position_r, 0]) router_guide_screw_countersink_cut();
+        translate([od/3,0, 0]) router_guide_screw_countersink_cut();
         translate([0,0, guide_base_h-etch_depth]) linear_extrude(height=etch_depth+NOTHING) text("2", valign="center", halign="center");
     }
 }
 
-encoder_tab_router_guide();
+module bezel_router_guide() {
+    difference() {
+        union() {
+            color("purple") minkowski() {
+                linear_extrude(height=guide_base_h/2) projection() children(0);
+                cylinder(r=guide_r+fence_t+router_offset_r, h=guide_base_h/2);
+            }
+            translate([0,0, guide_base_h]) router_fence() children(0);
+        }
+        children(0);
+        for (a = [45 : 90 : 315]) {
+            rotate([0,0,a]) translate([screw_position_r, 0, 0]) router_guide_screw_countersink_cut();
+        }
+        translate([screw_position_r + 10,0,guide_base_h-etch_depth]) linear_extrude(height=etch_depth+NOTHING) text("3", valign="center", halign="center");
+    }
+}
+
+
+bezel_router_guide() cylinder(d=od, h=guide_base_h);
+// encoder_tab_router_guide();
 
 // Custom Tachometer
 // partial_bezel(32);
