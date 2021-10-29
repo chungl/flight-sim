@@ -1,4 +1,4 @@
-NUM_OUTER_POTS=1;
+NUM_OUTER_POTS=2;
 
 LARGE_BEZEL_CHAMFER_INNER_DIAMETER=36.25*2;
 LARGE_BEZEL_CHAMFER_OUTER_DIAMETER=39.5*2;
@@ -29,7 +29,8 @@ pot_h=10.8+0.75;
 panel_thickness=5.3; // Thickness of the panel material (the Embeded portion of the bezel)
 bezel_height_above_panel=pot_h-7; // For flush bezel, set this to 0.
 
-screw_position_r=_or+4.75;
+screw_position_offset=4.75;
+screw_position_r=_or+screw_position_offset;
 screw_tab_w=10;
 screw_socket_od=3.15*2;
 screw_socket_id=1.5*2;
@@ -41,7 +42,8 @@ tab_socket_backstop_hole_id=1; //.8*2; // Diameter of a smaller hole in the bott
 pot_shaft_hole_d=6.75;
 pot_major=7.5;
 pot_minor=7.5;
-pot_position_r=screw_position_r + 1;
+pot_position_offset=screw_position_offset+1;
+pot_position_r=_or+pot_position_offset;
 pot_tab_major=25;
 pot_tab_fillet_r=4.675;
 _pot_tab_circle_overlap=_or - sqrt(pow(_or,2)-pow((pot_tab_major/2),2)); // Arc height as fn of chord length and radius
@@ -68,8 +70,8 @@ NOTHING=0.1;
 
 $fn=100;
 
-module screw_tab() {
-    translate([screw_position_r, 0, 0]) difference() {
+module screw_tab(r=screw_position_r) {
+    translate([r, 0, 0]) difference() {
         union() {
             cylinder(d=screw_tab_w, h=_tab_base_h);
             translate([-_tab_extension_l, -screw_tab_w/2, 0]) cube([_tab_extension_l, screw_tab_w, _tab_base_h]);
@@ -80,8 +82,8 @@ module screw_tab() {
     }
 }
 
-module outer_pot_tab() {
-    rotate([0,0,-90]) translate([0, pot_position_r, 0]) union() {
+module outer_pot_tab(r=pot_position_r) {
+    rotate([0,0,-90]) translate([0, r, 0]) union() {
         translate([0, pot_tab_minor/2-pot_tab_fillet_r, 0]) hull() {
             translate([-pot_tab_major/2 + pot_tab_fillet_r, 0, 0]) cylinder(r=pot_tab_fillet_r, h=total_h);
             translate([pot_tab_major/2 - pot_tab_fillet_r, 0, 0]) cylinder(r=pot_tab_fillet_r, h=total_h);
@@ -101,48 +103,49 @@ module pot_cut() {
     translate([-pot_major/2, -pot_minor/2, -NOTHING]) cube([pot_major, pot_minor, pot_h]);
 }
 
-module outer_pot_cut() {
-    rotate([0,0,-90]) translate([0, pot_position_r, 0]) union() {
+module outer_pot_cut(r=pot_position_r) {
+    rotate([0,0,-90]) translate([0, r, 0]) union() {
         pot_cut();
         // WIRE CAVITY
         translate([-pot_tab_major/2-NOTHING, -pot_wire_cut_w/2, -NOTHING]) cube([pot_tab_major + 2*NOTHING, pot_wire_cut_w, pot_wire_cut_h]);
     }
 }
 
-module outer_additions(with_tabs=true) {
+module outer_additions(num_pots=NUM_OUTER_POTS, outer_radius=_or, with_tabs=true) {
     rotate([0,0,-45]) union() {
         // POTS: 0, 1, or 2
-        if (NUM_OUTER_POTS > 0) {
-            for (i= [0 : NUM_OUTER_POTS-1]) {
-                rotate([0,0,-90*i]) outer_pot_tab();
+        if (num_pots > 0) {
+            for (i= [0 : num_pots-1]) {
+                rotate([0,0,-90*i]) outer_pot_tab(r=outer_radius+pot_position_offset);
             }
         }
         if (with_tabs) {
             // SCREWS: remaining positions
-            for (i= [NUM_OUTER_POTS : 3]) {
-                rotate([0,0,-90*i]) screw_tab();
+            for (i= [num_pots : 3]) {
+                rotate([0,0,-90*i]) screw_tab(r=outer_radius+screw_position_offset);
             }
         }
     }
 }
 
-module outer_cuts() {
+module outer_cuts(num_pots=NUM_OUTER_POTS, outer_radius=_or) {
     rotate([0,0,-45]) union() {
-        if (NUM_OUTER_POTS > 0) {
-            for (i=[0 : NUM_OUTER_POTS - 1]) {
-                rotate([0,0,-90*i]) outer_pot_cut();
+        if (num_pots > 0) {
+            for (i=[0 : num_pots - 1]) {
+                rotate([0,0,-90*i]) outer_pot_cut(outer_radius+pot_position_offset);
             }
         }
     }
 }
 
-module bezel_chamfer_cut(has_flat=false, flat_from_center=0, flat_chamfer_depth=total_h) {
+module bezel_chamfer_cut(chamfer_outer_diameter=bezel_od, chamfer_inner_diameter=id, has_flat=false, flat_from_center=0, flat_chamfer_depth=total_h) {
+    _chamfer_offset=chamfer_outer_diameter-chamfer_inner_diameter;
     difference() {
-        translate([0,0,-NOTHING]) cylinder(d1=id, d2=bezel_od, h=total_h+2*NOTHING);
+        translate([0,0,-NOTHING]) cylinder(d1=chamfer_inner_diameter, d2=chamfer_outer_diameter, h=total_h+2*NOTHING);
         if (has_flat) {
             translate([0,-flat_from_center,total_h-flat_chamfer_depth]) union() {
-                rotate([atan((_bezel_offset)/total_h),0,0]) translate([-od/2,-od,0]) cube([od, od, od]);
-                translate([-od/2, -od, -total_h]) cube([od, od, total_h]);
+                rotate([atan((_chamfer_offset)/total_h),0,0]) translate([-chamfer_outer_diameter/2,-chamfer_outer_diameter,0]) cube([chamfer_outer_diameter, chamfer_outer_diameter, chamfer_outer_diameter]);
+                translate([-chamfer_outer_diameter/2, -chamfer_outer_diameter, -total_h]) cube([chamfer_outer_diameter, chamfer_outer_diameter, total_h]);
             }
         }
     }
@@ -151,25 +154,27 @@ module bezel_chamfer_cut(has_flat=false, flat_from_center=0, flat_chamfer_depth=
 attitude_pot_wire_cut_major=30;
 attitude_pot_wire_cut_minor=pot_minor;
 
-module main_bezel(with_tabs=true, solid=false) {
+module main_bezel(outer_diameter=od, inner_diameter=id, chamfer_outer_diameter=bezel_od, num_pots=NUM_OUTER_POTS,  with_tabs=true, solid=false) {
+    outer_pot_r=outer_diameter+pot_position_offset;
+    outer_radius=outer_diameter/2;
     difference() {
         union() {
-            cylinder(d=od, h=total_h);
-            outer_additions(with_tabs);
+            cylinder(d=outer_diameter, h=total_h);
+            outer_additions(num_pots=num_pots, outer_radius=outer_radius, with_tabs=with_tabs);
             if (HAS_ATTITUDE) {
                 intersection() {
                     difference() {
-                        translate([0,-attitude_tab_minor, 0]) cylinder(d=od, h=_tab_base_h);
-                        translate([0,0,-NOTHING]) cylinder(d=od, h=_tab_base_h+2*NOTHING);
+                        translate([0,-attitude_tab_minor, 0]) cylinder(d=outer_diameter, h=_tab_base_h);
+                        translate([0,0,-NOTHING]) cylinder(d=outer_diameter, h=_tab_base_h+2*NOTHING);
                     }
-                    translate([-attitude_tab_major/2, -od/2-attitude_tab_minor-NOTHING, -NOTHING]) cube([attitude_tab_major, attitude_tab_minor+od/2, _tab_base_h+2*NOTHING]);
+                    translate([-attitude_tab_major/2, -outer_radius-attitude_tab_minor-NOTHING, -NOTHING]) cube([attitude_tab_major, attitude_tab_minor+outer_radius, _tab_base_h+2*NOTHING]);
                 }
             }
         }
         if (!solid) {
             if (HAS_ATTITUDE) {
-                bezel_chamfer_cut(has_flat=true, flat_from_center=attitude_flat_distance_from_center, flat_chamfer_depth=2);
-                translate([0,-attitude_flat_distance_from_center - (od/2-attitude_flat_distance_from_center)/2,0]) union() {
+                bezel_chamfer_cut(chamfer_outer_diameter=chamfer_outer_diameter, chamfer_inner_diameter=inner_diameter, has_flat=true, flat_from_center=attitude_flat_distance_from_center, flat_chamfer_depth=2);
+                translate([0,-attitude_flat_distance_from_center - (outer_radius-attitude_flat_distance_from_center)/2,0]) union() {
                     pot_cut();
                     translate([-attitude_pot_wire_cut_major/2, -attitude_pot_wire_cut_minor/2, -NOTHING]) cube([
                         attitude_pot_wire_cut_major,
@@ -178,9 +183,9 @@ module main_bezel(with_tabs=true, solid=false) {
                     ]);
                 }
             } else {
-                bezel_chamfer_cut();
+                bezel_chamfer_cut(chamfer_outer_diameter=chamfer_outer_diameter, chamfer_inner_diameter=inner_diameter);
             }
-            outer_cuts();
+            outer_cuts(num_pots=num_pots, outer_radius=outer_radius);
         }
     }
 }
@@ -350,12 +355,53 @@ module bezel_router_guide() {
     }
 }
 
+alignment_base_h=1;
+
+module bezel_alignment_template(bezel_diameters=[LARGE_BEZEL_OUTER_DIAMETER, SMALL_BEZEL_OUTER_DIAMETER], drill_hole_d=screw_socket_id) {
+    plate_r=bezel_diameters[0]/2+screw_position_offset + screw_tab_w/2 + guide_r;
+    window_major=plate_r/2;
+    window_minor=window_major/3;
+    height_with_etches=alignment_base_h+len(bezel_diameters*etch_depth);
+    difference() {
+        union() {
+            cylinder(r=plate_r, h=alignment_base_h);
+            for (i= [0 : 1 : len(bezel_diameters) - 1]) {
+                translate([0, 0, alignment_base_h]) intersection() {
+                    main_bezel(outer_diameter=bezel_diameters[i], chamfer_outer_diameter=bezel_diameters[i], inner_diameter=bezel_diameters[i]-3, num_pots=0);
+                    cylinder(r=plate_r, h=(i+1)*etch_depth);
+                }
+            }        
+        }
+        for (d=bezel_diameters) {
+            for (a=[45:90:315]) {
+                rotate([0,0,a]) translate([d/2+screw_position_offset, 0, -NOTHING]) cylinder(d=drill_hole_d, h=height_with_etches+2*NOTHING);
+            }
+        }
+        for (a = [0 : 90 : 270]) rotate([0,0,a]) {
+            translate([plate_r-1.5, 0, -NOTHING]) rotate([0,0,-45]) cube([4,4,alignment_base_h + 2*NOTHING]);
+            translate([plate_r/2, 0, -NOTHING]) linear_extrude(height=alignment_base_h+len(bezel_diameters)*etch_depth + 2*NOTHING, scale=1.5) polygon(points=[
+                [-window_major/2,0], [0, -window_minor/2], [window_major/2, 0], [0, window_minor/2]
+            ]);
+        }
+        translate([0,0,-NOTHING]) cylinder(d1=1, d2=3, h=alignment_base_h+2*NOTHING);
+        rotate([0,0,22.5]) translate([bezel_diameters[0]/2+screw_position_offset, 0, alignment_base_h-etch_depth]) rotate([0,0,-22.5]) linear_extrude(height=etch_depth+NOTHING) text("1", valign="center", halign="center");
+    }
+
+}
+
+
+
 
 // STANDARD BEZELS WITH OPTIONAL EXTERNAL POTENTIOMETERS
 // main_bezel();
-// bezel_router_guide() cylinder(d=od, h=guide_base_h);
-// encoder_tab_router_guide();
 
 // CUSTOM TACHOMETER (HALF INSTRUMENT)
 // partial_bezel(32);
-bezel_router_guide() partial_bezel(32, with_tabs=false, solid=true);
+
+// INSTALLATION_AIDS
+bezel_alignment_template();
+// bezel_router_guide() cylinder(d=LARGE_BEZEL_OUTER_DIAMETER, h=guide_base_h);
+// encoder_tab_router_guide();
+
+// for custom tachometer
+// bezel_router_guide() partial_bezel(32, with_tabs=false, solid=true);
