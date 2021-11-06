@@ -17,6 +17,7 @@ BUTTON_HEIGHT=10.8+0.75;
 BUTTON_MAJOR_WIDTH=7.5;
 BUTTON_MINOR_WIDTH=7.5;
 BUTTON_SHAFT_DIAMETER=6.5;
+_BUTTON_HEIGHT_ABOVE_PANEL=BUTTON_HEIGHT-ENCODER_HEIGHT;
 
 
 id=LARGE_BEZEL_CHAMFER_INNER_DIAMETER;
@@ -24,7 +25,7 @@ bezel_od=LARGE_BEZEL_CHAMFER_OUTER_DIAMETER;
 od=LARGE_BEZEL_OUTER_DIAMETER;
 _or=od/2;
 
-pot_h=10.8+0.75;
+pot_h=ENCODER_HEIGHT;
 // Total bezel height is divided into three regions: Tab (sits behind the panel), Embeded (in the panel), and Raised (above the panel).
 panel_thickness=5.3; // Thickness of the panel material (the Embeded portion of the bezel)
 bezel_height_above_panel=pot_h-7; // For flush bezel, set this to 0.
@@ -37,7 +38,7 @@ screw_socket_id=1.5*2;
 screw_socket_h=3;
 tab_socket_backstop_h=0.75; // Thickness of the "bottom" of the screw socket, or 0 to disable.
 tab_socket_backstop_hole_id=1; //.8*2; // Diameter of a smaller hole in the bottom of the socket, or 0 for none.
-
+backstop_t=1.5;
 
 pot_shaft_hole_d=6.75;
 pot_major=7.5;
@@ -63,12 +64,14 @@ _top_t=(od-bezel_od)/2;
 _tab_base_h=total_h-panel_thickness-bezel_height_above_panel;
 _tab_extension_l=screw_position_r-id/2;
 
-MODEL_SUPPORT_FOR_HANGING_CIRCLES=false;
+MODEL_SUPPORT_FOR_HANGING_CIRCLES=true;
 SUPPORT_LAYER_H=0.25;
 
 NOTHING=0.1;
 
-$fn=100;
+$fn=360;
+
+main_bezel(num_pots=1);
 
 module screw_tab(r=screw_position_r) {
     translate([r, 0, 0]) difference() {
@@ -82,13 +85,23 @@ module screw_tab(r=screw_position_r) {
     }
 }
 
-module outer_pot_tab(r=pot_position_r) {
+module _outer_pot_tab(r) {
     rotate([0,0,-90]) translate([0, r, 0]) union() {
         translate([0, pot_tab_minor/2-pot_tab_fillet_r, 0]) hull() {
             translate([-pot_tab_major/2 + pot_tab_fillet_r, 0, 0]) cylinder(r=pot_tab_fillet_r, h=total_h);
             translate([pot_tab_major/2 - pot_tab_fillet_r, 0, 0]) cylinder(r=pot_tab_fillet_r, h=total_h);
         }
         translate([-pot_tab_major/2, -pot_tab_minor/2, 0]) cube([pot_tab_major, pot_tab_minor - pot_tab_fillet_r, total_h]);
+    }
+}
+
+module outer_pot_tab(r=pot_position_r) {
+    union() {
+        _outer_pot_tab(r);
+        minkowski() {
+            linear_extrude(height=_tab_base_h/2) projection() _outer_pot_tab(r);
+            cylinder(r=backstop_t, h=_tab_base_h/2);
+        }
     }
 }
 
@@ -107,7 +120,7 @@ module outer_pot_cut(r=pot_position_r) {
     rotate([0,0,-90]) translate([0, r, 0]) union() {
         pot_cut();
         // WIRE CAVITY
-        translate([-pot_tab_major/2-NOTHING, -pot_wire_cut_w/2, -NOTHING]) cube([pot_tab_major + 2*NOTHING, pot_wire_cut_w, pot_wire_cut_h]);
+        translate([-pot_tab_major/2-backstop_t-NOTHING, -pot_wire_cut_w/2, -NOTHING]) cube([pot_tab_major + 2*backstop_t + 2*NOTHING, pot_wire_cut_w, pot_wire_cut_h]);
     }
 }
 
@@ -160,6 +173,7 @@ module main_bezel(outer_diameter=od, inner_diameter=id, chamfer_outer_diameter=b
     difference() {
         union() {
             cylinder(d=outer_diameter, h=total_h);
+            cylinder(d=outer_diameter+2*backstop_t, h=_tab_base_h);
             outer_additions(num_pots=num_pots, outer_radius=outer_radius, with_tabs=with_tabs);
             if (HAS_ATTITUDE) {
                 intersection() {
@@ -399,7 +413,7 @@ module bezel_alignment_template(bezel_diameters=[LARGE_BEZEL_OUTER_DIAMETER, SMA
 // partial_bezel(32);
 
 // INSTALLATION_AIDS
-bezel_alignment_template();
+// bezel_alignment_template();
 // bezel_router_guide() cylinder(d=LARGE_BEZEL_OUTER_DIAMETER, h=guide_base_h);
 // encoder_tab_router_guide();
 
