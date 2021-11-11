@@ -1,12 +1,13 @@
-NUM_OUTER_POTS=2;
+NUM_OUTER_POTS=0;
 
-LARGE_BEZEL_CHAMFER_INNER_DIAMETER=36.25*2;
-LARGE_BEZEL_CHAMFER_OUTER_DIAMETER=39.5*2;
+_CHAMFER_WIDTH=3.25;
+_FLAT_WIDTH=0.75;
 LARGE_BEZEL_OUTER_DIAMETER=40.25*2;
 
-SMALL_BEZEL_CHAMFER_INNER_DIAMETER=24.5*2;
-SMALL_BEZEL_CHAMFER_OUTER_DIAMETER=27.75*2;
 SMALL_BEZEL_OUTER_DIAMETER=28.5*2;
+
+YOKE_BEZEL_INNER_DIAMETER=50.7;
+YOKE_FLAT_FROM_CENTER=46-YOKE_BEZEL_INNER_DIAMETER/2;
 
 ENCODER_HEIGHT=7;
 ENCODER_MAJOR_WIDTH=13;
@@ -20,9 +21,10 @@ BUTTON_SHAFT_DIAMETER=6.5;
 _BUTTON_HEIGHT_ABOVE_PANEL=BUTTON_HEIGHT-ENCODER_HEIGHT;
 
 
-id=LARGE_BEZEL_CHAMFER_INNER_DIAMETER;
-bezel_od=LARGE_BEZEL_CHAMFER_OUTER_DIAMETER;
 od=LARGE_BEZEL_OUTER_DIAMETER;
+bezel_od=od-2*_FLAT_WIDTH;
+id=bezel_od-2*_CHAMFER_WIDTH;
+
 _or=od/2;
 
 pot_h=ENCODER_HEIGHT;
@@ -71,7 +73,7 @@ NOTHING=0.1;
 
 $fn=360;
 
-main_bezel(num_pots=1);
+// main_bezel(num_pots=0);
 
 module screw_tab(r=screw_position_r) {
     translate([r, 0, 0]) difference() {
@@ -167,7 +169,18 @@ module bezel_chamfer_cut(chamfer_outer_diameter=bezel_od, chamfer_inner_diameter
 attitude_pot_wire_cut_major=30;
 attitude_pot_wire_cut_minor=pot_minor;
 
-module main_bezel(outer_diameter=od, inner_diameter=id, chamfer_outer_diameter=bezel_od, num_pots=NUM_OUTER_POTS,  with_tabs=true, solid=false) {
+module main_bezel(
+    outer_diameter=od, 
+    inner_diameter=id, 
+    chamfer_outer_diameter=bezel_od, 
+    num_pots=NUM_OUTER_POTS,  
+    with_tabs=true, 
+    solid=false, 
+    center_fill=HAS_ATTITUDE, 
+    fill_from_center=attitude_flat_distance_from_center,
+    center_chamfer_depth=2,
+    center_sensor=HAS_ATTITUDE,
+) {
     outer_pot_r=outer_diameter+pot_position_offset;
     outer_radius=outer_diameter/2;
     difference() {
@@ -186,15 +199,17 @@ module main_bezel(outer_diameter=od, inner_diameter=id, chamfer_outer_diameter=b
             }
         }
         if (!solid) {
-            if (HAS_ATTITUDE) {
-                bezel_chamfer_cut(chamfer_outer_diameter=chamfer_outer_diameter, chamfer_inner_diameter=inner_diameter, has_flat=true, flat_from_center=attitude_flat_distance_from_center, flat_chamfer_depth=2);
+            if (center_fill) {
+                bezel_chamfer_cut(chamfer_outer_diameter=chamfer_outer_diameter, chamfer_inner_diameter=inner_diameter, has_flat=true, flat_from_center=attitude_flat_distance_from_center, flat_chamfer_depth=center_chamfer_depth);
                 translate([0,-attitude_flat_distance_from_center - (outer_radius-attitude_flat_distance_from_center)/2,0]) union() {
-                    pot_cut();
-                    translate([-attitude_pot_wire_cut_major/2, -attitude_pot_wire_cut_minor/2, -NOTHING]) cube([
-                        attitude_pot_wire_cut_major,
-                        attitude_pot_wire_cut_minor,
-                        pot_wire_cut_h+NOTHING
-                    ]);
+                    if (center_sensor) {
+                        pot_cut();
+                        translate([-attitude_pot_wire_cut_major/2, -attitude_pot_wire_cut_minor/2, -NOTHING]) cube([
+                            attitude_pot_wire_cut_major,
+                            attitude_pot_wire_cut_minor,
+                            pot_wire_cut_h+NOTHING
+                        ]);
+                    }
                 }
             } else {
                 bezel_chamfer_cut(chamfer_outer_diameter=chamfer_outer_diameter, chamfer_inner_diameter=inner_diameter);
@@ -204,7 +219,7 @@ module main_bezel(outer_diameter=od, inner_diameter=id, chamfer_outer_diameter=b
     }
 }
 
-module partial_bezel(visible_to_cut=id, chamfer_depth=total_h, with_tabs=true, solid=false) {
+module partial_bezel(visible_to_cut=id, chamfer_depth=total_h, with_tabs=true, solid=false, num_pots=0 ) {
     bottom_tab_major=10;
     bottom_tab_minor=5;
     union() {
@@ -411,6 +426,36 @@ module bezel_alignment_template(bezel_diameters=[LARGE_BEZEL_OUTER_DIAMETER, SMA
 
 // CUSTOM TACHOMETER (HALF INSTRUMENT)
 // partial_bezel(32);
+
+// HONEYCOMB ALPHA BEZEL
+module honeycomb_bezel(top=true, bottom=true) {
+    difference() {
+        rotate([0,0,180]) main_bezel(
+            outer_diameter=SMALL_BEZEL_OUTER_DIAMETER, 
+            inner_diameter=YOKE_BEZEL_INNER_DIAMETER,
+            chamfer_outer_diameter=SMALL_BEZEL_OUTER_DIAMETER-2*_FLAT_WIDTH,
+            center_fill=true,
+            fill_from_center=YOKE_FLAT_FROM_CENTER,
+            center_chamfer_depth=total_h,
+            center_sensor=false
+        );
+        if (!top) {
+            translate([-SMALL_BEZEL_OUTER_DIAMETER, 0, -NOTHING]) cube([
+                2*SMALL_BEZEL_OUTER_DIAMETER, 
+                SMALL_BEZEL_OUTER_DIAMETER, 
+                total_h + 2*NOTHING]);
+        }
+        if (!bottom) {
+            translate([-SMALL_BEZEL_OUTER_DIAMETER, -SMALL_BEZEL_OUTER_DIAMETER, -NOTHING]) cube([
+                2*SMALL_BEZEL_OUTER_DIAMETER, 
+                SMALL_BEZEL_OUTER_DIAMETER, 
+                total_h + 2*NOTHING]);
+        }
+    }
+}
+
+// honeycomb_bezel(bottom=false);
+honeycomb_bezel(top=false);
 
 // INSTALLATION_AIDS
 // bezel_alignment_template();
