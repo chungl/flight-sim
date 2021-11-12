@@ -331,7 +331,7 @@ module router_fence(fence_h=3, solid=false) {
 guide_base_h=4;
 guide_r=5;
 etch_depth=0.25;
-countersink_h=2.5;
+countersink_h=3.5;
 countersink_d=6;
 
 module router_guide_screw_countersink_cut(hole_d=screw_socket_id, countersink_d=countersink_d, countersink_depth=countersink_h, material_thickness=guide_base_h) {
@@ -455,11 +455,12 @@ module honeycomb_bezel(top=true, bottom=true) {
 }
 
 // honeycomb_bezel(bottom=false);
-honeycomb_bezel(top=false);
+// honeycomb_bezel(top=false);
 
 // INSTALLATION_AIDS
 // bezel_alignment_template();
 // bezel_router_guide() cylinder(d=LARGE_BEZEL_OUTER_DIAMETER, h=guide_base_h);
+bezel_router_guide() cylinder(d=SMALL_BEZEL_OUTER_DIAMETER, h=guide_base_h);
 // encoder_tab_router_guide();
 
 // for custom tachometer
