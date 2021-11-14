@@ -1,4 +1,36 @@
-NUM_OUTER_POTS=0;
+// =====================================================
+// =             MISC. MODEL SETTINGS                  =
+// =====================================================
+
+// This generates solid roofs where there are holes that
+// may otherwise be difficult to print without external support.
+MODEL_SUPPORT_FOR_HANGING_CIRCLES=true;
+
+// The thickness of support material to print that will
+// fill in holes in ceilings. I recommend one print layer.
+SUPPORT_LAYER_H=0.25;
+
+// Number of faces in a "circle".
+// 360 gives a pretty smooth circle on most printers.
+// 100 has some visible edges but renders faster. Good for development.
+$fn=360;
+
+// Certain cuts and other model features are oversized
+// by this marginal amount to eliminate rendering artifacts.
+// This should not actually change the shape of the part
+// if designed properly, and the change would be negligble anyway.
+// Consider changing this to 0 for print renders.
+// Use 0.1 or smaller for viewing quick renders.
+NOTHING=0.1;
+
+// =====================================================
+// =               SIZE DEFINITIONS                    =
+// =====================================================
+// This section allows you to store some key measurements
+// These numbers do not get applied to the models directly.
+// Instead, use them in the GLOBAL CONFIGURATIONS sections
+// below or as arguments to individual part modules in the
+// PART CONSTRUCTION section.
 
 _CHAMFER_WIDTH=3.25;
 _FLAT_WIDTH=0.75;
@@ -21,16 +53,27 @@ BUTTON_SHAFT_DIAMETER=6.5;
 _BUTTON_HEIGHT_ABOVE_PANEL=BUTTON_HEIGHT-ENCODER_HEIGHT;
 
 
-od=LARGE_BEZEL_OUTER_DIAMETER;
-bezel_od=od-2*_FLAT_WIDTH;
-id=bezel_od-2*_CHAMFER_WIDTH;
+// =====================================================
+// =           BASIC GLOBAL CONFIGURATIONS             =
+// =====================================================
 
-_or=od/2;
+NUM_OUTER_POTS=0;
+HAS_ATTITUDE=false;
+
+od=LARGE_BEZEL_OUTER_DIAMETER;
 
 pot_h=ENCODER_HEIGHT;
+pot_shaft_hole_d=ENCODER_SHAFT_DIAMETER;
+pot_major=ENCODER_MAJOR_WIDTH;
+pot_minor=ENCODER_MINOR_WIDTH;
+
+
 // Total bezel height is divided into three regions: Tab (sits behind the panel), Embeded (in the panel), and Raised (above the panel).
 panel_thickness=5.3; // Thickness of the panel material (the Embeded portion of the bezel)
 bezel_height_above_panel=pot_h-7; // For flush bezel, set this to 0.
+
+// Do not modify
+_or=od/2;
 
 screw_position_offset=4.75;
 screw_position_r=_or+screw_position_offset;
@@ -42,9 +85,6 @@ tab_socket_backstop_h=0.75; // Thickness of the "bottom" of the screw socket, or
 tab_socket_backstop_hole_id=1; //.8*2; // Diameter of a smaller hole in the bottom of the socket, or 0 for none.
 backstop_t=1.5;
 
-pot_shaft_hole_d=6.75;
-pot_major=7.5;
-pot_minor=7.5;
 pot_position_offset=screw_position_offset+1;
 pot_position_r=_or+pot_position_offset;
 pot_tab_major=25;
@@ -55,25 +95,41 @@ pot_wire_cut_w=8.5;
 pot_wire_cut_h=2.5;
 total_h=pot_h + 1;
 
-HAS_ATTITUDE=false;
 attitude_flat_distance_from_center=14.7;
 attitude_tab_minor=3;
 attitude_tab_major=18;
 
+// Calculations for modeling. Do not modify
+bezel_od=od-2*_FLAT_WIDTH;
+id=bezel_od-2*_CHAMFER_WIDTH;
 _bezel_offset=(bezel_od-id)/2;
 _top_t=(od-bezel_od)/2;
-
 _tab_base_h=total_h-panel_thickness-bezel_height_above_panel;
 _tab_extension_l=screw_position_r-id/2;
 
-MODEL_SUPPORT_FOR_HANGING_CIRCLES=true;
-SUPPORT_LAYER_H=0.25;
 
-NOTHING=0.1;
+// =====================================================
+// =               PART CONSTRUCTION                   =
+// =====================================================
+// Enable one part at a time by uncommenting it (removing the "//")
 
-$fn=360;
+// STANDARD BEZELS WITH OPTIONAL EXTERNAL POTENTIOMETERS
+main_bezel(num_pots=1, outer_diameter=LARGE_BEZEL_OUTER_DIAMETER);
 
-// main_bezel(num_pots=0);
+// CUSTOM TACHOMETER (HALF INSTRUMENT)
+// partial_bezel(32);
+
+// CUSTOM BEZEL FOR DECONSTRUCTEDHONEYCOMB YOKE (SMALL GAUGE FORM FACTOR)
+// honeycomb_bezel(split=true);
+
+// INSTALLATION_AIDS (May take a few minutes to render)
+// bezel_alignment_template();
+// bezel_router_guide() cylinder(d=LARGE_BEZEL_OUTER_DIAMETER, h=guide_base_h);
+// bezel_router_guide() cylinder(d=SMALL_BEZEL_OUTER_DIAMETER, h=guide_base_h);
+// encoder_tab_router_guide();
+// for custom tachometer:
+// bezel_router_guide() partial_bezel(32, with_tabs=false, solid=true);
+
 
 module screw_tab(r=screw_position_r) {
     translate([r, 0, 0]) difference() {
@@ -173,7 +229,7 @@ module main_bezel(
     outer_diameter=od,
     inner_diameter=id,
     chamfer_outer_diameter=bezel_od,
-    num_pots=NUM_OUTER_POTS,  
+    num_pots=NUM_OUTER_POTS,
     with_tabs=true,
     solid=false,
     center_fill=HAS_ATTITUDE,
@@ -267,7 +323,6 @@ module clock_profile() {
                 translate([-upper_w/2, base_from_center+lower_h, 0]) cube([upper_w, upper_h,_z]);
                 translate([-upper_w/2, base_from_center+lower_h, 0]) fillet_90(r=fillet_r, h=_z, a=90);
                 translate([upper_w/2, base_from_center+lower_h, 0]) fillet_90(r=fillet_r, h=_z, a=0);
-                
             }
             translate([-upper_w/2, base_from_center+lower_h+upper_h, 0]) fillet_90(r=fillet_r, h=_z, a=270);
             translate([upper_w/2, base_from_center+lower_h+upper_h, 0]) fillet_90(r=fillet_r, h=_z, a=180);
@@ -399,7 +454,7 @@ module bezel_alignment_template(bezel_diameters=[LARGE_BEZEL_OUTER_DIAMETER, SMA
                     main_bezel(outer_diameter=bezel_diameters[i], chamfer_outer_diameter=bezel_diameters[i], inner_diameter=bezel_diameters[i]-3, num_pots=0);
                     cylinder(r=plate_r, h=(i+1)*etch_depth);
                 }
-            }        
+            }
         }
         for (d=bezel_diameters) {
             for (a=[45:90:315]) {
@@ -417,16 +472,6 @@ module bezel_alignment_template(bezel_diameters=[LARGE_BEZEL_OUTER_DIAMETER, SMA
     }
 
 }
-
-
-
-
-// STANDARD BEZELS WITH OPTIONAL EXTERNAL POTENTIOMETERS
-// main_bezel();
-
-// CUSTOM TACHOMETER (HALF INSTRUMENT)
-// partial_bezel(32);
-
 
 // HONEYCOMB ALPHA BEZEL
 module honeycomb_bezel(split=true) {
@@ -459,14 +504,3 @@ module honeycomb_bezel(split=true) {
         );
     }
 }
-
-honeycomb_bezel(split=true);
-
-// INSTALLATION_AIDS
-// bezel_alignment_template();
-// bezel_router_guide() cylinder(d=LARGE_BEZEL_OUTER_DIAMETER, h=guide_base_h);
-// bezel_router_guide() cylinder(d=SMALL_BEZEL_OUTER_DIAMETER, h=guide_base_h);
-// encoder_tab_router_guide();
-
-// for custom tachometer
-// bezel_router_guide() partial_bezel(32, with_tabs=false, solid=true);
