@@ -159,15 +159,19 @@ module setScrewCut(a) {
     translate([0, 0, gymbalW/2]) rotate([ 0, 0, a]) rotate([0, -90, 0]) translate([0, 0, encoderR - .1]) cylinder(d=setScrewD, h=armEncoderOuterR - encoderR + .1);
 }
 
-difference() {
-union() {
-createOuterGymbal();
-translate([armL, 0, 0]) rotate([0, 0, handleA]) createHandleInsert();
-createInnerGymbal();
-knurledPotKey();
+module flap_lever() {
+    difference() {
+        union() {
+            createOuterGymbal();
+            translate([armL, 0, 0]) rotate([0, 0, handleA]) createHandleInsert();
+            createInnerGymbal();
+            knurledPotKey();
+        }
+        setScrewCut(potKey0Offset);
+        setScrewCut(-45);
+        //springCut();
+    }
+    //spring();
 }
-setScrewCut(potKey0Offset);
-setScrewCut(-45);
-//springCut();
-}
-//spring();
+
+flap_lever();
