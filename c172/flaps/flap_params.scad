@@ -16,6 +16,7 @@ flap_bracket_x2=8.5;
 flap_bracket_y1=6.5;
 flap_bracket_y2=flap_bracket_y1;
 
+flap_offset_from_desk=-14;
 
 lever_from_left=26.0;
 lever_from_bottom=24.5;
@@ -33,8 +34,8 @@ frame_cut_d=flap_body_d+2*_frame_cut_clearance;
 
 
 proj_view_neg_x=100;
-proj_view_pos_x=100;
-// proj_view_pos_x=frame_cut_w/2;
+// proj_view_pos_x=100;
+proj_view_pos_x=frame_cut_w/2;
 
 proj_view_w=proj_view_pos_x+proj_view_neg_x;
 proj_view_h=200;

@@ -43,7 +43,7 @@ module project_frame(solid_color=false) {
                 // "FACADE"
                 color(color_facade) translate([0, 0, -proj_facade_h + proj_h_from_desk]) cube([proj_view_w, proj_facade_d, proj_facade_h]);
             }
-            translate([proj_view_neg_x-frame_cut_w/2 -NOTHING, -NOTHING, (flap_body_h-frame_cut_h)/2-NOTHING]) cube([frame_cut_w + 2*NOTHING, frame_cut_h+2*NOTHING, frame_cut_d+ 2*NOTHING]);
+            translate([proj_view_neg_x-frame_cut_w/2 -NOTHING, -NOTHING, flap_offset_from_desk + (flap_body_h-frame_cut_h)/2-NOTHING]) cube([frame_cut_w + 2*NOTHING, frame_cut_h+2*NOTHING, frame_cut_d+ 2*NOTHING]);
         }
         // DESK
         color(color_desk) translate([0, proj_facade_d + proj_frame_d + proj_desk_gap_d, -proj_desk_h]) cube([proj_view_w, proj_view_d, proj_desk_h]);
@@ -51,4 +51,4 @@ module project_frame(solid_color=false) {
 }
 
 project_frame();
-flap_assembly();
+translate([0, 0, flap_offset_from_desk]) flap_assembly();

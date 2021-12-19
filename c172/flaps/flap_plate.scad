@@ -1,6 +1,6 @@
 include <flap_params.scad>;
 
-_plate_hole_overlap=2;
+_plate_hole_overlap=1;
 plate_w=frame_cut_w+_plate_hole_overlap*2;
 plate_h=frame_cut_h+_plate_hole_overlap*2;
 plate_r=3.4;
