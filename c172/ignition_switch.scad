@@ -1,3 +1,4 @@
+// Current implementation only supports 90 - 180 degrees. Update "Arc Between" section for different range.
 total_angle=120;
 start_key_angle_from_center=-total_angle/2;
 lock_flat_angle_from_key=0;
@@ -28,13 +29,17 @@ _lock_pin_half_angle=atan(lock_pin_slot_t/(2*pin_r_from_center));
 
 coupler_length=20.8+square_depth;
 coupler_d=20;
+coupler_chamfer_d=14;
+coupler_chamfer_h=3;
 
 screw_head_diameter=12;
 screw_d=6.8;
 screw_head_t=4;
-coupler_screw_access_depth=12;
+coupler_screw_access_depth=9;
 
 coupler_switch_shaft_d=5.85;
+coupler_set_screw_d=2.4;
+coupler_set_screw_from_top=4;
 
 frame_t=4.75;
 frame_base_t=4;
@@ -56,14 +61,22 @@ spring_hole_first_angle=0;
 
 lock_spacer_t=12.2;
 
+support_layer_height=0.0;
+
 NOTHING=0.1;
 $fn=100;
 
-module frame() {
+function polar_y_to_cartesian(a, r) = [r*sin(a), r*cos(a)];
+
+module frame(spacer=false) {
+
     difference() {
         union() {
             translate([0,0,center_from_floor]) rotate([0,90,0]) cylinder(d=frame_d, h=frame_length);
             translate([0,-frame_d/2, 0]) cube([frame_length, frame_d, center_from_floor]);
+            if (spacer) {
+                translate([-lock_spacer_t, 0, center_from_floor]) rotate([0,90,0]) rotate([0,0,-90 + start_key_angle_from_center]) lock_spacer();
+            }
         }
         // CUT OFF ANY EXTRA CYLINDER
         translate([-NOTHING,-frame_d/2-NOTHING,-frame_d-NOTHING]) cube([frame_length+2*NOTHING, frame_d+2*NOTHING, frame_d+NOTHING]);
@@ -94,13 +107,26 @@ module frame() {
 }
 
 module coupler() {
+    /*
+    ORIENTATION NOTES:
+    Print: as designed.
+    Assembly: 
+        * XY plane @ z=0 is the face that will mate to the lock cylinder.
+        * The opposite face will mate to the rotary switch.
+        * The side of the cylinder on the negative Y axis (as modeled) will be at the top when the switch is in the "off" position.
+        * The operation `translate([90, 0, 90])` 
+
+    */
     difference() {
         // COUPLER BODY
-        cylinder(d=coupler_d, h=coupler_length);
+        union() {
+            cylinder(d=coupler_d, h=coupler_length - coupler_chamfer_h);
+            translate([0,0,coupler_length - coupler_chamfer_h]) cylinder(d1=coupler_d, d2=coupler_chamfer_d, h=coupler_chamfer_h);
+        }
         // SQUARE RECESS FOR LOCK TUMBLER
         translate([-tumbler_square_width/2, -tumbler_square_width/2, -NOTHING]) cube([tumbler_square_width, tumbler_square_width, square_depth+NOTHING]);
         // LOCK SCREW HOLE
-        translate([0,0, square_depth-NOTHING]) cylinder(d=screw_d, h=lock_screw_depth + 2*NOTHING);
+        translate([0,0, square_depth + support_layer_height]) cylinder(d=screw_d, h=lock_screw_depth -support_layer_height + NOTHING);
         // LOCK SCREW HEAD CHAMBER
         translate([0,0, square_depth + lock_screw_depth]) cylinder(d=screw_head_diameter, h=coupler_screw_access_depth);
         // LOCK SCREW ACCESS SLOT (HEAD)
@@ -109,16 +135,42 @@ module coupler() {
             rotate([0,0, -start_key_angle_from_center]) translate([0, -coupler_d/2, 0]) cylinder(d=screw_head_diameter, h=screw_head_t);
         }
         // LOCK SCREW ACCESS SLOT (SHAFT)
-        translate([0,0, square_depth]) hull() {
-            cylinder(d=screw_d, h=lock_screw_depth + coupler_screw_access_depth);
-            rotate([0,0, -start_key_angle_from_center]) translate([0, -coupler_d/2, 0]) cylinder(d=screw_d+2, h=lock_screw_depth + coupler_screw_access_depth);
+        translate([0,0, square_depth + support_layer_height]) hull() {
+            cylinder(d=screw_d, h=lock_screw_depth + coupler_screw_access_depth - support_layer_height);
+            rotate([0,0, -start_key_angle_from_center]) translate([0, -coupler_d/2, 0]) cylinder(d=screw_d+2, h=lock_screw_depth + coupler_screw_access_depth - support_layer_height);
         }
         // SWITCH SHAFT HOLE
-        translate([0,0, square_depth + lock_screw_depth + coupler_screw_access_depth-NOTHING]) cylinder(d=coupler_switch_shaft_d, h=coupler_length-square_depth-lock_screw_depth-coupler_screw_access_depth + 2*NOTHING);
+        translate([0,0, square_depth + lock_screw_depth + coupler_screw_access_depth + support_layer_height -NOTHING]) cylinder(d=coupler_switch_shaft_d, h=coupler_length-square_depth-lock_screw_depth-coupler_screw_access_depth + 2*NOTHING - support_layer_height);
+        // SWITCH SET SCREW HOLES
+        rotate([0,0,-start_key_angle_from_center]) translate([0,0,coupler_length-coupler_set_screw_from_top]) rotate([90, 0, 0]) cylinder(d=coupler_set_screw_d, h=coupler_d);
+        rotate([0,0,-start_key_angle_from_center - 90]) translate([0,0,coupler_length-coupler_set_screw_from_top]) rotate([90, 0, 0]) cylinder(d=coupler_set_screw_d, h=coupler_d);
 
-        // LOCK LOCATOR APPROX
-        for ( i = [floor(-_lock_pin_half_angle):total_angle -1 + ceil(_lock_pin_half_angle)]) {
-            rotate([0,0,-i]) translate([0,-pin_r_from_center, -NOTHING]) cylinder(d=lock_pin_slot_t, h=square_depth+NOTHING);
+        // LOCK ROTATION RESTRICTION SLOT
+        rotate([0,0,pin_angle_from_start]) union() {
+            // Start: 
+            translate([0,-pin_r_from_center, -NOTHING]) cylinder(d=lock_pin_slot_t, h=square_depth+NOTHING);
+            // End
+            rotate([0,0, -total_angle]) translate([0,-pin_r_from_center, -NOTHING]) cylinder(d=lock_pin_slot_t, h=square_depth+NOTHING);
+            // Arc Between
+            translate([0,0,-NOTHING]) difference() {
+                // Outer edge of arc
+                cylinder(r=pin_r_from_center + lock_pin_slot_t/2, h= square_depth + NOTHING);
+                // Inner edge of arc
+                translate([0,0,-NOTHING]) cylinder(r=pin_r_from_center - lock_pin_slot_t/2, h= square_depth + 3*NOTHING);
+                // At this point we have a ring shape (cylinder minus a smaller cylinder), and we want to get rid of most of that ring so that only an arc remains.
+                translate([0,0,-NOTHING]) linear_extrude(height=square_depth + 3*NOTHING) {
+                    // Bounding shape to subtract all of the ring that is not part of the arc shape that we want.
+                    // This bounding shape is a square with sides larger than the diameter of the ring, and it has a wedge cut out of it where the ring should remain.
+                    polygon(points=[
+                        [0,0], // Center of the square/circle; vertex of the wedge
+                        polar_y_to_cartesian(180, 2*pin_r_from_center),
+                        [2*pin_r_from_center, -2*pin_r_from_center],
+                        [2*pin_r_from_center, 2*pin_r_from_center],
+                        [-2*pin_r_from_center, 2*pin_r_from_center],
+                        polar_y_to_cartesian(180+total_angle, 2*pin_r_from_center)
+                    ]);
+                }
+            }
         }
 
     }
@@ -141,8 +193,8 @@ module lock_spacer() {
     }
 }
 
-frame();
+// frame(spacer=true);
 // translate([frame_t + 5, 0, center_from_floor]) rotate([0,90,0]) rotate([0,0,-90 + start_key_angle_from_center]) coupler();
-translate([-lock_spacer_t, 0, center_from_floor]) rotate([0,90,0]) rotate([0,0,-90 + start_key_angle_from_center]) lock_spacer();
+coupler();
 
 // wafer_shim();
