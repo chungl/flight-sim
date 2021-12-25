@@ -163,15 +163,15 @@ module outer_pot_tab(r=pot_position_r) {
     }
 }
 
-module pot_cut() {
+module pot_cut(x=pot_major, y=pot_minor, z=pot_h, d=pot_shaft_hole_d) {
     // SENSOR SHAFT HOLE
     if (!MODEL_SUPPORT_FOR_HANGING_CIRCLES) {
-        translate([0,0,-NOTHING]) cylinder(d=pot_shaft_hole_d, h=total_h+2*NOTHING);
+        translate([0,0,-NOTHING]) cylinder(d=d, h=total_h+2*NOTHING);
     } else {
-        translate([0,0,pot_h+SUPPORT_LAYER_H]) cylinder(d=pot_shaft_hole_d, h=total_h-SUPPORT_LAYER_H+NOTHING);
+        translate([0,0,z+SUPPORT_LAYER_H]) cylinder(d=d, h=total_h-SUPPORT_LAYER_H+NOTHING);
     }
     // SENSOR CAVITY
-    translate([-pot_major/2, -pot_minor/2, -NOTHING]) cube([pot_major, pot_minor, pot_h]);
+    translate([-x/2, -y/2, -NOTHING]) cube([x, y, z]);
 }
 
 module outer_pot_cut(r=pot_position_r) {
@@ -502,5 +502,52 @@ module honeycomb_bezel(split=true) {
             center_chamfer_depth=total_h,
             center_sensor=false
         );
+    }
+}
+
+module radius_cube(size, r) {
+    x = size[0];
+    y = size[1];
+    z = size[2];
+    d=2*r;
+    union() {
+        translate([r, r, 0]) cylinder(r=r, h=z);
+        translate([x - r, r, 0]) cylinder(r=r, h=z);
+        translate([r, y-r, 0]) cylinder(r=r, h=z);
+        translate([x - r, y-r, 0]) cylinder(r=r, h=z);
+        translate([r, 0, 0]) cube([x-d, y, z]);
+        translate([0, r, 0]) cube([x, y-d, z]);
+    }
+}
+
+module tact_button(cube_xy=[7,7], cube_h=10) {
+
+}
+
+module annunciator(view_w, view_h, wall_t, outer_r, button_area_w=15) {
+    annunc_w=2*wall_t + view_w + button_area_w;
+    annunc_h=2*wall_t + view_h;
+    difference() {
+        union() {
+            // BEZEL BODY
+            radius_cube([annunc_w, annunc_h, total_h], outer_r);        
+            // BACKSTOP
+            translate([-backstop_t, -backstop_t, 0]) radius_cube([annunc_w+2*backstop_t, annunc_h+2*backstop_t, _tab_base_h], outer_r+backstop_t);
+            translate([annunc_w, annunc_h/2, 0]) screw_tab(screw_position_offset);    
+            translate([0, annunc_h/2, 0]) rotate([0,0,180]) screw_tab(screw_position_offset);    
+        }
+        // VIEW AREA
+        translate([wall_t, wall_t, -NOTHING]) radius_cube([view_w, view_h, total_h + 2*NOTHING], outer_r - wall_t);
+        // RECESS FOR SWITCH/BUTTON & WIRES
+        translate([annunc_w - button_area_w/2, annunc_h/2, 0]) children();
+    }
+}
+
+
+module tactile_button_wires(x, y, wire_cut_w, backplate_offset=2, backplate_h=1) {
+    union() {
+        translate([-x/2, -wire_cut_w/2, -NOTHING]) cube([x, wire_cut_w, _tab_base_h+NOTHING]);
+        translate([-x/2 - backplate_offset, -y/2, -NOTHING]) cube([x + 2*backplate_offset, y, backplate_h+NOTHING]);
+        children();
     }
 }
