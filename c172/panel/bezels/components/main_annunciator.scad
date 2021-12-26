@@ -1,8 +1,12 @@
 use <../bezel_lib.scad>;
 
+// WARNING: For some reason this mesh tends to be broken and requires repair.
+// Check the sliced model carefully, even if the render appears correct.
+// https://www.formware.co/onlinestlrepair
+
 // Annunciator Bezel
-annunc_view_h=14.2;
-annunc_view_w=70.1;
+annunc_view_h=15.2;
+annunc_view_w=72.1;
 annunc_r=3.6;
 annunc_button_area_w=0;
 annunc_wall_t=1;
