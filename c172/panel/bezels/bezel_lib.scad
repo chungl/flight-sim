@@ -2,13 +2,17 @@
 // or replace this `include` statement with the configurations it would contain.
 include <bezel_config.scad>;
 
+// Set this to true when to generate models that can be subtracted from material to
+// create a void for the bezel.
+AS_DIE=false;
+
 // =====================================================
 // =               PART CONSTRUCTION                   =
 // =====================================================
 // Enable one part at a time by uncommenting it (removing the "//")
 
 // STANDARD BEZELS WITH OPTIONAL EXTERNAL POTENTIOMETERS
-main_bezel(num_pots=1, outer_diameter=LARGE_BEZEL_OUTER_DIAMETER);
+// main_bezel(num_pots=1, outer_diameter=LARGE_BEZEL_OUTER_DIAMETER);
 
 // CUSTOM TACHOMETER (HALF INSTRUMENT)
 // partial_bezel(32);
@@ -25,15 +29,22 @@ main_bezel(num_pots=1, outer_diameter=LARGE_BEZEL_OUTER_DIAMETER);
 // bezel_router_guide() partial_bezel(32, with_tabs=false, solid=true);
 
 
-module screw_tab(r=screw_position_r) {
+module screw_tab(r=screw_position_r, model_screws=AS_DIE) {
     translate([r, 0, 0]) difference() {
         union() {
+            // TAB BACKSTOP
             cylinder(d=screw_tab_w, h=_tab_base_h);
             translate([-_tab_extension_l, -screw_tab_w/2, 0]) cube([_tab_extension_l, screw_tab_w, _tab_base_h]);
+            // SOCKET
             translate([0,0,_tab_base_h]) cylinder(d=screw_socket_od, h=screw_socket_h);
+            if (model_screws) {
+                cylinder(d=screw_socket_id, h=total_h);
+            }
         }
-        translate([0,0,tab_socket_backstop_h-NOTHING]) cylinder(d=screw_socket_id, h=_tab_base_h+screw_socket_h-tab_socket_backstop_h+2*NOTHING);
-        translate([0,0,-NOTHING]) cylinder(d=tab_socket_backstop_hole_id, h=_tab_base_h+2*NOTHING);
+        if (!model_screws) {
+            translate([0,0,tab_socket_backstop_h-NOTHING]) cylinder(d=screw_socket_id, h=_tab_base_h+screw_socket_h-tab_socket_backstop_h+2*NOTHING);
+            translate([0,0,-NOTHING]) cylinder(d=tab_socket_backstop_hole_id, h=_tab_base_h+2*NOTHING);
+        }
     }
 }
 
@@ -76,7 +87,7 @@ module outer_pot_cut(r=pot_position_r) {
     }
 }
 
-module outer_additions(num_pots=NUM_OUTER_POTS, outer_radius=_or, with_tabs=true) {
+module outer_additions(num_pots=NUM_OUTER_POTS, outer_radius=_or, with_tabs=true, model_screws=AS_DIE) {
     rotate([0,0,-45]) union() {
         // POTS: 0, 1, or 2
         if (num_pots > 0) {
@@ -87,7 +98,7 @@ module outer_additions(num_pots=NUM_OUTER_POTS, outer_radius=_or, with_tabs=true
         if (with_tabs) {
             // SCREWS: remaining positions
             for (i= [num_pots : 3]) {
-                rotate([0,0,-90*i]) screw_tab(r=outer_radius+screw_position_offset);
+                rotate([0,0,-90*i]) screw_tab(r=outer_radius+screw_position_offset, model_screws=model_screws);
             }
         }
     }
@@ -122,7 +133,8 @@ module main_bezel(
     chamfer_outer_diameter=bezel_od,
     num_pots=NUM_OUTER_POTS,
     with_tabs=true,
-    solid=false,
+    as_die=AS_DIE,
+    solid=AS_DIE,
     center_fill=false,
     fill_from_center=0,
     center_chamfer_depth=2,
@@ -134,9 +146,9 @@ module main_bezel(
         union() {
             cylinder(d=outer_diameter, h=total_h);
             cylinder(d=outer_diameter+2*backstop_t, h=_tab_base_h);
-            outer_additions(num_pots=num_pots, outer_radius=outer_radius, with_tabs=with_tabs);
+            outer_additions(num_pots=num_pots, outer_radius=outer_radius, with_tabs=with_tabs, model_screws=as_die);
         }
-        if (!solid) {
+        if (!solid && !as_die) {
             if (center_fill) {
                 bezel_chamfer_cut(chamfer_outer_diameter=chamfer_outer_diameter, chamfer_inner_diameter=inner_diameter, has_flat=true, flat_from_center=fill_from_center, flat_chamfer_depth=center_chamfer_depth);
                 if (center_sensor) {

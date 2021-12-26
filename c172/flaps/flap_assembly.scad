@@ -3,9 +3,6 @@ include <flap_params.scad>;
 use <flap_lever.scad>;
 use <flap_plate.scad>;
 
-color_frame="wheat";
-color_facade="burlywood";
-color_desk="darkgray";
 
 NOTHING = 0.01;
 

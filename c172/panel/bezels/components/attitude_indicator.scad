@@ -9,11 +9,12 @@ attitude_pot_wire_cut_minor=pot_minor;
 
 attitude_indicator();
 
-module attitude_indicator() {
+module attitude_indicator(as_die) {
     main_bezel(
         center_fill=true,
         center_sensor=true,
-        fill_from_center=attitude_flat_distance_from_center
+        fill_from_center=attitude_flat_distance_from_center,
+        as_die=as_die
     ) {
         // CUTS FOR ENCODER AND WIRE ROUTING
         pot_cut();
