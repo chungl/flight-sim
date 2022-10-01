@@ -3,8 +3,9 @@ include <flap_params.scad>;
 _plate_hole_overlap=1;
 plate_w=frame_cut_w+_plate_hole_overlap*2;
 plate_h=frame_cut_h+_plate_hole_overlap*2;
-plate_r=3.4;
-plate_t=2.1;
+
+plate_t=flap_plate_t;
+plate_r=flap_plate_r;
 
 lever_slot_w1=7.85;
 lever_slot_h1=22.4;
