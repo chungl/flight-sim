@@ -3,22 +3,22 @@ $fn=100;
 n=60;
 
 
-MOVING_CLEARANCE=0.1;
+MOVING_CLEARANCE=0.2;
 // STRAW/SHAFT
 straw_center_from_bottom=15;
-straw_d=6;
+straw_d=6.1;
 straw_hole_depth=10;
 
 // STRAW-SIDE COUPLER
-retainer_d=3;
-shaft_coupler_d=straw_d+retainer_d;
+retainer_d=3.1;
+shaft_coupler_d=straw_d+retainer_d+2;
 shaft_coupler_l=20;
 
 
 // POT-SIDE COUPLER
 pot_coupler_l=15;
 pot_coupler_base_h=straw_center_from_bottom - shaft_coupler_d/2;
-pot_coupler_upper_wall_t=retainer_d/2;
+pot_coupler_upper_wall_t=retainer_d;
 pot_coupler_w=shaft_coupler_d+2*pot_coupler_upper_wall_t+MOVING_CLEARANCE;
 
 pot_coupler_upper_l=10;
@@ -27,7 +27,7 @@ pot_coupler_upper_h=shaft_coupler_d+retainer_d;
 
 // POT TAB
 pot_tab_w=9;
-pot_tab_t=1.5;
+pot_tab_t=1.4;
 pot_tab_h=10;
 
 
@@ -91,5 +91,5 @@ module upper_rib() {
 }
 
 
-// color("cyan") pot_coupler();
+color("cyan") pot_coupler();
 translate([pot_coupler_l/2,0,straw_center_from_bottom]) shaft_coupler();
