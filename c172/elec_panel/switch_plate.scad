@@ -1,11 +1,11 @@
-rocker_cut_x = 23;
-rocker_cut_y = 36.5;
+rocker_cut_x = 22.3;
+rocker_cut_y = 36.3;
 switch_cut_d = 6;
 
 num_switches = 7;
 
-switch_gap = 23;
-rocker_gap = switch_gap;
+switch_gap = 20.5;
+rocker_gap = 16;
 
 key_switch_cut_d = 20;
 key_switch_gap = 30;
