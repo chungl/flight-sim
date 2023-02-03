@@ -4,7 +4,7 @@ switch_cut_d = 6;
 
 num_switches = 7;
 
-switch_gap = 20.5;
+switch_gap = 20.5+switch_cut_d/2;
 rocker_gap = 16;
 
 key_switch_cut_d = 20;
