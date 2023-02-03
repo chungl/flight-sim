@@ -72,7 +72,7 @@ module etch() {
 }
 
 module switch(upper_labels, lower_labels=[]) {
-    cylinder(d=switch_cut_d, h=cut_t);
+    translate([0,0,-NOTHING]) cylinder(d=switch_cut_d, h=cut_t);
     etch() {
         translate([0,switch_text_voffset + switch_cut_d/2, 0]) multiline_text(upper_labels, font=font, halign="center", size=text_size, line_height=text_line_height);
         if (len(lower_labels)>0) {
@@ -117,7 +117,7 @@ module lights() {
 }
 
 module rocker_switch_pair(upper_labels, lower_left_labels, lower_right_labels) {
-    translate([0,-rocker_cut_y/2, 0]) cube([rocker_cut_x, rocker_cut_y, cut_t]);
+    translate([0,-rocker_cut_y/2, -NOTHING]) cube([rocker_cut_x, rocker_cut_y, cut_t]);
     etch() {
         translate([rocker_cut_x/2, rocker_cut_y/2 + rocker_text_voffset]) multiline_text(upper_labels);
         translate([rocker_cut_x/4, -rocker_cut_y/2 - rocker_text_voffset]) multiline_text(lower_left_labels);
@@ -186,7 +186,7 @@ keyswitch_labels = [
     
 ];
 module key_switch() {
-    cylinder(d=key_switch_cut_d, h=cut_t);
+    translate([0,0,-NOTHING]) cylinder(d=key_switch_cut_d, h=cut_t);
     etch() 
         rotary_leader_lines(total_angle=120, width=key_switch_label_bracket_w-1.5*text_line_height, height=key_switch_label_bracket_w-1.5*text_line_height) {
             vertical_text_array(["O","F","F"], halign="right"); 
@@ -199,8 +199,8 @@ module key_switch() {
     translate([key_switch_cut_d, 0 ,0]) children();
 }
 
-module switch_panel() {
-    translate([0,0,-NOTHING]) 
+module electrical_panel_switches() {
+    translate([0,0,0]) 
         key_switch();
         translate([key_switch_gap, 0, 0]) rocker_switch_pair(["MASTER"], ["ALT"], ["BAT"])
         translate([rocker_gap, 0, 0]) switch(["FUEL", "PUMP"], ["OFF"])
@@ -209,4 +209,31 @@ module switch_panel() {
         translate([rocker_gap, 0, 0]) rocker_switch_pair(["AVIONICS"], ["BUS 1"], ["BUS 2"]);
 }
 
-projection() switch_panel();
+control_panel_height = 4.75*25.4;
+electrical_panel_width = 16*25.4;
+switches_from_left = 3.5*25.4;
+switches_from_top = 1.125*25.4;
+
+panel_screw_d = 4.75;
+panel_screw_from_side = 0.25*25.4;
+offset_panel_screw = 17;
+
+module electrical_panel() {
+    difference() {
+        cube([electrical_panel_width, control_panel_height, material_t]);
+        translate([switches_from_left, control_panel_height - switches_from_top, 0]) electrical_panel_switches();
+        translate([panel_screw_from_side, panel_screw_from_side, -NOTHING]) cylinder(d=panel_screw_d, h=material_t+2*NOTHING);
+        translate([panel_screw_from_side, control_panel_height-offset_panel_screw, -NOTHING]) cylinder(d=panel_screw_d, h=material_t + 2*NOTHING);
+        translate([electrical_panel_width-panel_screw_from_side, panel_screw_from_side, -NOTHING]) cylinder(d=panel_screw_d, h=material_t + 2*NOTHING);
+        translate([electrical_panel_width-panel_screw_from_side, control_panel_height - panel_screw_from_side, -NOTHING]) cylinder(d=panel_screw_d, h=material_t + 2*NOTHING);
+    }
+}
+
+
+module laser_electrical_panel() {
+    projection(cut=true) translate([0,0,-material_t]) electrical_panel();
+}
+
+laser_electrical_panel();
+
+
