@@ -229,11 +229,10 @@ module electrical_panel() {
     }
 }
 
-
-module laser_electrical_panel() {
-    projection(cut=true) translate([0,0,-material_t]) electrical_panel();
+module laser() {
+    projection(cut=true) translate([0,0,-material_t]) children();
 }
 
-laser_electrical_panel();
 
-
+laser() electrical_panel();
+// laser_electrical_panel();
