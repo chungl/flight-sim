@@ -29,7 +29,7 @@ module flap_assembly(render=false) {
         rotate([90, 0, 0]) flap_body(flap_material_t);
         if(!(render && RENDER_SIDES==false)) {
             translate([flap_bracket_x1, 0, flap_bracket_y2+CLEARANCE_FIT/2]) rotate([0,0,90]) rotate([90, 0, 0]) flap_frame_side_servo();
-            // translate([flap_body_w-flap_material_t-flap_bracket_x2, 0, flap_bracket_y2+CLEARANCE_FIT/2]) rotate([0,0,90]) rotate([90, 0, 0]) flap_frame_side_pot();
+            translate([flap_body_w-flap_material_t-flap_bracket_x2, 0, flap_bracket_y2+CLEARANCE_FIT/2]) rotate([0,0,90]) rotate([90, 0, 0]) flap_frame_side_pot();
         }
     }
 }

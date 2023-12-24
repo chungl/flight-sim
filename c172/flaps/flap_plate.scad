@@ -7,6 +7,9 @@ plate_h=frame_cut_h+_plate_hole_overlap*2;
 plate_t=flap_plate_t;
 plate_r=flap_plate_r;
 
+mounting_hole_d=2;
+mounting_hole_inset_from_frame=flap_bracket_y1/2;
+
 lever_slot_w1=7.85;
 lever_slot_h1=22.4;
 lever_slot_w2=5.0;
@@ -24,8 +27,14 @@ needle_slot_h=35.2;
 
 needle_slot_w=_needle_w+2*needle_slot_clearance;
 
-NOTHING=1;
+NOTHING=.1;
 
+module mounting_holes(d, h, NOTHING=NOTHING) {
+    translate([mounting_hole_inset_from_frame,mounting_hole_inset_from_frame,-NOTHING]) cylinder(d=d, h=h+2*NOTHING);
+    translate([flap_body_w - mounting_hole_inset_from_frame,mounting_hole_inset_from_frame,-NOTHING]) cylinder(d=d, h=h+2*NOTHING);
+    translate([flap_body_w - mounting_hole_inset_from_frame,flap_body_h - mounting_hole_inset_from_frame,-NOTHING]) cylinder(d=d, h=h+2*NOTHING);
+    translate([mounting_hole_inset_from_frame,flap_body_h - mounting_hole_inset_from_frame,-NOTHING]) cylinder(d=d, h=h+2*NOTHING);
+}
 
 $fn=100;
 module flap_plate() {
@@ -43,6 +52,9 @@ module flap_plate() {
             cylinder(d=needle_slot_w, h=plate_t+2*NOTHING);
             translate([0,needle_slot_h-needle_slot_w, -NOTHING]) cylinder(d=needle_slot_w, h=plate_t+2*NOTHING);
         }
+        translate([0,0,]) mounting_holes(d=mounting_hole_d, h=flap_plate_t+2*NOTHING);
+        
+
     }
 }
 
@@ -50,5 +62,8 @@ module flap_body(d=flap_body_d) {
     translate([0,0,-d]) difference() {
         cube([flap_body_w, flap_body_h, d]);
         translate([flap_bracket_x1, flap_bracket_y1, -NOTHING]) cube([flap_body_w-flap_bracket_x1-flap_bracket_x2, flap_body_h-flap_bracket_y1-flap_bracket_y2, d+2*NOTHING]);
+        mounting_holes(d=mounting_hole_d, h=d);
     }
 }
+
+flap_plate();
