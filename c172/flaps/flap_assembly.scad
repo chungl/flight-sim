@@ -4,9 +4,6 @@ use <flap_lever.scad>;
 use <flap_plate.scad>;
 use <flap_sides.scad>;
 
-color_frame="wheat";
-color_facade="burlywood";
-color_desk="darkgray";
 
 RENDER_SIDES=true;
 $fn=30;
