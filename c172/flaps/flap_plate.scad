@@ -139,17 +139,17 @@ module flap_body(d=flap_body_d) {
 }
 
 // color("black") translate([0,0,-plate_t]) flap_plate();
-// flap_plate();
+projection() flap_plate();
 // flap_plate_label();
 // detents();
 // flap_body(d=10);
-difference() {
-    projection() flap_plate_blank();
-    flap_plate_label();
-//    translate([lever_from_left, lever_from_bottom + lever_slot_top_from_axis]) detent_speed_regions();
+// difference() {
+//     projection() flap_plate_blank();
+//     flap_plate_label();
+// //    translate([lever_from_left, lever_from_bottom + lever_slot_top_from_axis]) detent_speed_regions();
     
-//     translate([lever_from_left, lever_from_bottom + lever_slot_top_from_axis]) color("white") translate([-detent_label_w_primary-needle_slot_w-1,-0]) 
-//             detent_labels();
-//     color("white") translate([1.5,flap_body_h/2]) vertical_text_array(["W","I","N","G"," ","F","L","A","P","S"],char_align_index=4.5,halign="center");
+// //     translate([lever_from_left, lever_from_bottom + lever_slot_top_from_axis]) color("white") translate([-detent_label_w_primary-needle_slot_w-1,-0]) 
+// //             detent_labels();
+// //     color("white") translate([1.5,flap_body_h/2]) vertical_text_array(["W","I","N","G"," ","F","L","A","P","S"],char_align_index=4.5,halign="center");
 
-}
+// }
