@@ -46,8 +46,8 @@ flap_pot_tab_w=3;
 
 needle_w=2.8;
 needle_from_left=16.4;
-needle_from_front=40;
-needle_from_bottom=13.8 + lever_from_bottom;
+needle_from_front=60;
+needle_from_bottom=12.8 + lever_from_bottom;
 servo_w1=23;
 servo_w2=12;
 servo_from_center_1=7;

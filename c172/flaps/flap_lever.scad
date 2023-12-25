@@ -182,13 +182,13 @@ module flap_lever(a_major=undef, a_minor=undef) {
 flap_lever();
 
 needle_t=2.8;
-needle_length=50.8;
+needle_length=65.8;
 needle_w=2.5;
 servo_d=4.8;
 servo_cut_d=1.65;
 servo_screw_d=1.75;
 servo_outer_d=8.65;
-needle_hull_length=22.5;
+needle_hull_length=2.5;
 
 NOTHING=0.1;
 

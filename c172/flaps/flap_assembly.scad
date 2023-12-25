@@ -9,6 +9,10 @@ RENDER_SIDES=true;
 $fn=30;
 NOTHING = 0.01;
 
+needle_positions=[
+-17,0,9,17
+];
+
 flap_positions = [
     [0, 0],
     [12.8, 0],
@@ -18,11 +22,12 @@ flap_positions = [
 
 module flap_assembly(render=false) {
     flap_position = flap_positions[$t*len(flap_positions)];
+    needle_position = needle_positions[$t*len(needle_positions)];
     // color("white") translate([-frame_cut_w/2,0,0]) cube([frame_cut_w, frame_cut_d, frame_cut_h]);
     translate([-flap_body_w/2,0,0]) union() {
         translate([lever_from_left, lever_from_front, lever_from_bottom]) rotate([-90, 0, -90]) flap_lever(flap_position[0], flap_position[1]);
         translate([0,0,0]) rotate([90,0,0]) flap_plate();
-        translate([needle_from_left,needle_from_front, needle_from_bottom]) rotate([-90,0,-90]) needle(0);
+        translate([needle_from_left,needle_from_front, needle_from_bottom]) rotate([-90,0,-90]) needle(needle_position);
         rotate([90, 0, 0]) flap_body(flap_material_t);
         if(!(render && RENDER_SIDES==false)) {
             translate([flap_bracket_x1, 0, flap_bracket_y2+CLEARANCE_FIT/2]) rotate([0,0,90]) rotate([90, 0, 0]) flap_frame_side_servo();

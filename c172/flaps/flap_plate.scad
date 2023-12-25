@@ -1,5 +1,5 @@
 include <flap_params.scad>;
-include <../elec_panel/switch_plate.scad>;
+include <../text_utils.scad>;
 
 _plate_hole_overlap=1;
 plate_w=frame_cut_w+_plate_hole_overlap*2;
@@ -28,15 +28,16 @@ lever_slot_top_from_axis=34;
 _needle_w=2.8;
 
 needle_slot_clearance=0.4;
-needle_slot_h=35.2;
 
 needle_slot_w=_needle_w+2*needle_slot_clearance;
 needle_slot_from_left = needle_from_left + (needle_slot_w/2 -needle_slot_clearance);
+needle_slot_h=lever_slot_h+needle_slot_w;
 
 // Detent labels
 // Detent label region spands from the right of the needle slot to the left edge of the lever detent region.
-detent_label_from_left = needle_slot_from_left + needle_slot_w;
-detent_label_w = lever_from_left - detent_label_from_left + (lever_slot_w1 - lever_slot_w3);
+detent_label_from_left = needle_slot_from_left + needle_slot_w/2;
+detent_label_w_primary = lever_from_left - detent_label_from_left;
+detent_label_w_full = detent_label_w_primary + (lever_slot_w1 - lever_slot_w3);
 
 NOTHING=.1;
 
@@ -61,14 +62,17 @@ module detents() {
     }
 }
 
+module flap_plate_blank() {
+    translate([plate_r-(plate_w - flap_body_w)/2, plate_r-(plate_h-flap_body_h)/2, 0])  minkowski() {
+            cube([plate_w-2*plate_r, plate_h-2*plate_r, plate_t/2]);
+            cylinder(r=plate_r, h=plate_t/2);
+        }
+}
 $fn=100;
 module flap_plate() {
     difference() {
         // Plate w/ overlap
-        translate([plate_r-(plate_w - flap_body_w)/2, plate_r-(plate_h-flap_body_h)/2, 0])  minkowski() {
-            cube([plate_w-2*plate_r, plate_h-2*plate_r, plate_t/2]);
-            cylinder(r=plate_r, h=plate_t/2);
-        }
+        flap_plate_blank();
         // Lever detents
         position_detents() detents();
         // Needle slot
@@ -89,25 +93,41 @@ module flap_plate() {
 detent_region_blue_h = lever_slot_h1;
 // 10 degrees to full
 detent_region_white_h = lever_slot_h - detent_region_blue_h;
+detent_text_from_left = needle_slot_from_left-needle_slot_w/2-1;
+
+module detent_labels() {
+    // Positioned relative to upper right corner of flaps@0 label
+    translate([0,-lever_slot_h]) {
+        translate([0,lever_slot_h]) text("UP", font=font, size=text_size, valign="top", halign="right");
+        translate([0,lever_slot_h-lever_slot_h1]) text("10°", font=font, size=text_size, valign="center", halign="right");
+        translate([0,lever_slot_h3]) text("20°", font=font, size=text_size, valign="center", halign="right");
+        text("FULL", font=font, size=text_size, valign="bottom", halign="right");
+
+
+    }
+}
 
 // Positioned relative to upper left corner of detents
-module detent_labels() {
-    translate([-detent_label_w + (lever_slot_w1-lever_slot_w3), -lever_slot_h, 0]) {
+module detent_speed_regions() {
+    translate([-detent_label_w_primary, -lever_slot_h, 0]) {
         // Relative to lower left corner of labels
         // white region
-        color("white") square([detent_label_w, detent_region_white_h]);
-        color("deepskyblue") translate([0, detent_region_white_h]) {
-            square([detent_label_w, detent_region_blue_h]);
-            translate([(lever_slot_from_left - detent_label_from_left)/2, detent_region_blue_h/2]) vertical_text_array(["1", "1", "0"], valign="center", halign="center");
+        color("white") difference() {
+            square([detent_label_w_full, detent_region_white_h]);
+            translate([detent_label_w_primary/2, detent_region_white_h/2]) vertical_text_array(["8","5"], char_align_index=0.5, halign="center");
+        }
+        color("deepskyblue") translate([0, detent_region_white_h]) difference() {
+            // square([detent_label_w_primary, detent_region_blue_h]);
+            translate([detent_label_w_primary/2, detent_region_blue_h/2]) vertical_text_array(["1", "1", "0"], char_align_index=1, halign="center");
         }
     }
-
 }
+
 module flap_plate_label() {
-    difference() {
-        position_detents() detent_labels();
-        projection() flap_plate();
-    }
+        translate([lever_from_left, lever_from_bottom + lever_slot_top_from_axis]) detent_speed_regions();
+        translate([lever_from_left, lever_from_bottom + lever_slot_top_from_axis]) color("white") translate([-detent_label_w_primary-needle_slot_w-1,-0]) 
+            detent_labels();
+        color("white") translate([1.5,flap_body_h/2]) vertical_text_array(["W","I","N","G"," ","F","L","A","P","S"],char_align_index=4.5,halign="center");
 }
 
 module flap_body(d=flap_body_d) {
@@ -118,7 +138,18 @@ module flap_body(d=flap_body_d) {
     }
 }
 
-flap_plate();
+// color("black") translate([0,0,-plate_t]) flap_plate();
+// flap_plate();
 // flap_plate_label();
 // detents();
 // flap_body(d=10);
+difference() {
+    projection() flap_plate_blank();
+    flap_plate_label();
+//    translate([lever_from_left, lever_from_bottom + lever_slot_top_from_axis]) detent_speed_regions();
+    
+//     translate([lever_from_left, lever_from_bottom + lever_slot_top_from_axis]) color("white") translate([-detent_label_w_primary-needle_slot_w-1,-0]) 
+//             detent_labels();
+//     color("white") translate([1.5,flap_body_h/2]) vertical_text_array(["W","I","N","G"," ","F","L","A","P","S"],char_align_index=4.5,halign="center");
+
+}
