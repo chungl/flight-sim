@@ -68,3 +68,24 @@ proj_view_pos_x=frame_cut_w/2;
 proj_view_w=proj_view_pos_x+proj_view_neg_x;
 proj_view_h=200;
 proj_view_d=200;
+
+lever_slot_top_from_axis=34;
+needle_slot_clearance=0.4;
+// match flap_lever.scad
+_needle_w=2.8;
+
+needle_slot_w=_needle_w+2*needle_slot_clearance;
+
+bracket_x=30;
+bracket_y=58;
+bracket_wall_t=5;
+bracket_depth=8;
+bracket_offset_x=needle_from_left-needle_slot_clearance- bracket_wall_t;
+bracket_offset_y=lever_from_bottom+lever_slot_top_from_axis-bracket_y+bracket_wall_t+needle_slot_w/2;
+
+n_holes=3;
+hole_d=2.4;
+hole_depth=4.5;
+hole_from_top=5.5;
+
+$fn=100;

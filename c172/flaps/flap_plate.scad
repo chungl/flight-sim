@@ -1,5 +1,6 @@
 include <flap_params.scad>;
 include <../text_utils.scad>;
+use <frame_bracket.scad>;
 
 _plate_hole_overlap=1;
 plate_w=frame_cut_w+_plate_hole_overlap*2;
@@ -8,7 +9,7 @@ plate_h=frame_cut_h+_plate_hole_overlap*2;
 plate_t=flap_plate_t;
 plate_r=flap_plate_r;
 
-mounting_hole_d=2;
+mounting_hole_d=3;
 mounting_hole_inset_from_frame=flap_bracket_y1/2;
 
 // 0-10 degrees
@@ -22,12 +23,11 @@ lever_slot_w3=2.75;
 lever_slot_h3=10.1;
 lever_slot_h = lever_slot_h1+lever_slot_h2+lever_slot_h3;
 
-lever_slot_top_from_axis=34;
+
 
 // match flap_lever.scad
 _needle_w=2.8;
 
-needle_slot_clearance=0.4;
 
 needle_slot_w=_needle_w+2*needle_slot_clearance;
 needle_slot_from_left = needle_from_left + (needle_slot_w/2 -needle_slot_clearance);
@@ -87,6 +87,13 @@ module flap_plate() {
     }
 }
 
+module plate_with_bracket() {
+    union() {
+        flap_plate();
+        translate([bracket_offset_x,bracket_offset_y,-bracket_depth]) bracket();
+    }
+}
+
 
 
 // 0 - 10 degrees
@@ -139,7 +146,8 @@ module flap_body(d=flap_body_d) {
 }
 
 // color("black") translate([0,0,-plate_t]) flap_plate();
-projection() flap_plate();
+plate_with_bracket();
+// projection() flap_plate();
 // flap_plate_label();
 // detents();
 // flap_body(d=10);
