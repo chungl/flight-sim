@@ -5,12 +5,12 @@ module flap_frame_side() {
     // y=height
     // z=thickness
     difference() {
-        cube([flap_body_d, flap_body_h-flap_offset_from_desk-flap_bracket_y2, flap_material_t]);
+        cube([flap_body_d, bracket_y, flap_material_t]);
         // Bracket mounting holes
-        translate([flap_bracket_x1/2, -flap_bracket_y1, -NOTHING]) {
-            translate([0, flap_side_hole_1, 0]) cylinder(d=flap_side_hole_d, h=flap_material_t + 2*NOTHING);
-            translate([0, flap_side_hole_2, 0]) cylinder(d=flap_side_hole_d, h=flap_material_t + 2*NOTHING);
-            translate([0, flap_side_hole_3, 0]) cylinder(d=flap_side_hole_d, h=flap_material_t + 2*NOTHING);
+        let (hole_spacing = (bracket_y -2*bracket_wall_t)/(n_holes-1)) {
+            for (i= [0:n_holes-1]) {
+                translate([bracket_depth/2,hole_from_top + i*hole_spacing, -NOTHING]) cylinder(d=bracket_thru_hole_d, h=flap_material_t + 2*NOTHING);
+            }
         }
         // // Standoff holes
         // translate([flap_body_d - flap_material_t/2, 32, -NOTHING]) cylinder(d=flap_side_hole_d, h=flap_material_t + 2*NOTHING);
@@ -18,7 +18,7 @@ module flap_frame_side() {
 }
 
 module flap_frame_side_servo() {
-    difference() {
+    translate([0,0,-flap_material_t]) difference() {
         flap_frame_side();
         translate([needle_from_front, needle_from_bottom - flap_bracket_y1, 0]) {
             rotate([0,0,180]) servo_cut(flap_material_t);
@@ -63,3 +63,5 @@ module frame_bracket() {
         translate([tab_width + plate_outer_gap - flap_material_t, -NOTHING, -NOTHING]) cube([flap_material_t, notch_depth+NOTHING, flap_material_t+2*NOTHING]);
         translate([plate_outer_gap/2 + tab_width, bracket_h - (bracket_h - notch_depth)/2 , -NOTHING]) cylinder(d=3, h=flap_material_t+2*NOTHING);    }
 }
+
+flap_frame_side_servo();

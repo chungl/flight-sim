@@ -62,6 +62,13 @@ module detents() {
     }
 }
 
+// The flap plate is the decorative outer surface of the flap unit.
+// This module creates a blank plate, which does not yet have detents or holes subtracted.
+// This plate is designed to be wider than the "body" of the flap mechanism, 
+// such that it sits on over the instrument panel and covers any gaps between the flap unit and the sim frame.
+// The origin of this plate is aligned to the origin of the flap unit (lower left corner).
+// Because the plate is oversized, the bottom left corner will extend slightly below and to the left of the origin,
+// and the origin will be on the back of the plate.
 module flap_plate_blank() {
     translate([plate_r-(plate_w - flap_body_w)/2, plate_r-(plate_h-flap_body_h)/2, 0])  minkowski() {
             cube([plate_w-2*plate_r, plate_h-2*plate_r, plate_t/2]);
@@ -89,8 +96,8 @@ module flap_plate() {
 
 module plate_with_bracket() {
     union() {
-        flap_plate();
-        translate([bracket_offset_x,bracket_offset_y,-bracket_depth]) bracket();
+        translate([-bracket_offset_x, -bracket_offset_y, 0]) flap_plate();
+        translate([0,0,-bracket_depth]) bracket();
     }
 }
 

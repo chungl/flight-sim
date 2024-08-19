@@ -61,7 +61,7 @@ frame_cut_h=flap_body_h+2*_frame_cut_clearance;
 frame_cut_d=flap_body_d+2*_frame_cut_clearance;
 
 
-proj_view_neg_x=100;
+proj_view_neg_x=0;
 // proj_view_pos_x=100;
 proj_view_pos_x=frame_cut_w/2;
 
@@ -85,6 +85,7 @@ bracket_offset_y=lever_from_bottom+lever_slot_top_from_axis-bracket_y+bracket_wa
 
 n_holes=3;
 hole_d=2.4;
+bracket_thru_hole_d=3.1;
 hole_depth=4.5;
 hole_from_top=5.5;
 
