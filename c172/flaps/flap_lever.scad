@@ -52,16 +52,16 @@ module createHandleInsert() {
  translate([handleVisibleOffset, 0, 0]) union() {
         hull() {
             translate([-handleVisibleOffset, 0, 0]) cylinder(d=handleSlotH, h=armBaseT);
-            translate([handleHiddenOffset, 0, 0]) cylinder(d=handleSlotH, h=armBaseT);
-        }
-        hull() {
-            translate([handleHiddenOffset, 0, 0]) cylinder(d=handleSlotH, h=armBaseT);
-            translate([handleHiddenOffset + handleWidthTransitionD, 0, 0]) cylinder(d=handleSlotH, h=handleSlotW);
-        }
-        hull() {
-            translate([handleHiddenOffset + handleWidthTransitionD, 0, 0]) cylinder(d=handleSlotH, h=handleSlotW);
             translate([handleSlotD - handleSlotH, 0, 0]) cylinder(d=handleSlotH, h=handleSlotW);
         }
+        // color("green") hull() {
+        //     translate([handleHiddenOffset, 0, 0]) cylinder(d=handleSlotH, h=armBaseT);
+        //     translate([handleHiddenOffset, 0, 0]) cylinder(d=handleSlotH, h=armBaseT);
+        //     translate([handleHiddenOffset + handleWidthTransitionD, 0, 0]) cylinder(d=handleSlotH, h=handleSlotW);
+        // }
+        // color("blue") hull() {
+        //     translate([handleHiddenOffset + handleWidthTransitionD, 0, 0]) cylinder(d=handleSlotH, h=handleSlotW);
+        // }
  }
 }
 
@@ -208,7 +208,6 @@ module mirror_lever() {
     translate([0,0,-0]) mirror([180,0,0]) flap_lever();
 }
 
-mirror_lever();
 
 needle_t=2.8;
 needle_length=65.8;
@@ -238,4 +237,8 @@ module needle(a=0) {
     }
 }
 
+// OUTPUTS
+
 // needle();
+mirror_lever();
+// flap_lever();

@@ -153,7 +153,6 @@ module flap_body(d=flap_body_d) {
 }
 
 // color("black") translate([0,0,-plate_t]) flap_plate();
-plate_with_bracket();
 // projection() flap_plate();
 // flap_plate_label();
 // detents();
@@ -167,4 +166,19 @@ plate_with_bracket();
 // //             detent_labels();
 // //     color("white") translate([1.5,flap_body_h/2]) vertical_text_array(["W","I","N","G"," ","F","L","A","P","S"],char_align_index=4.5,halign="center");
 
+// }
+
+// OUTPUTS
+
+// plate_with_bracket();
+// labels
+difference() {
+    projection() flap_plate_blank();
+    flap_plate_label();
+}
+
+// Alignment template
+// difference() {
+//     projection() flap_plate_blank();
+//     projection() translate([bracket_offset_x, bracket_offset_y, 0]) bracket();
 // }

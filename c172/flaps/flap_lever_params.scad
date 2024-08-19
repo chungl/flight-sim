@@ -21,7 +21,7 @@ gymbalBottomLayerT=.5;
 armL=71;
 armBaseT=2.4;
 
-handleSlotW=3.6;
+handleSlotW=armBaseT;
 handleSlotH=3.8;
 handleSlotD=15;
 handleVisibleOffset=5;

@@ -12,7 +12,7 @@ proj_facade_d=5;
 proj_frame_d=12;
 proj_desk_gap_d=7;
 
-flap_material_t= 3.2; // 0.25*25.4;
+flap_material_t= 3/16*25.4; // ~4mm
 flap_plate_t=2.1;
 flap_plate_r=3.4;
 
@@ -77,11 +77,11 @@ _needle_w=2.8;
 needle_slot_w=_needle_w+2*needle_slot_clearance;
 
 bracket_x=30;
-bracket_y=58;
+bracket_y=53;
 bracket_wall_t=5;
 bracket_depth=8;
 bracket_offset_x=needle_from_left-needle_slot_clearance- bracket_wall_t;
-bracket_offset_y=lever_from_bottom+lever_slot_top_from_axis-bracket_y+bracket_wall_t+needle_slot_w/2;
+bracket_offset_y=lever_from_bottom+lever_slot_top_from_axis-bracket_y+needle_slot_w/2;
 
 n_holes=3;
 hole_d=2.4;

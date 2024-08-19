@@ -22,7 +22,7 @@ module flap_frame_side_servo() {
         flap_frame_side();
         translate([needle_from_front, needle_from_bottom - flap_bracket_y1, 0]) {
             rotate([0,0,180]) servo_cut(flap_material_t);
-            rotate([0,0,90]) servo_cut(flap_material_t);
+            // rotate([0,0,90]) servo_cut(flap_material_t);
         }
     }
 }
@@ -64,4 +64,13 @@ module frame_bracket() {
         translate([plate_outer_gap/2 + tab_width, bracket_h - (bracket_h - notch_depth)/2 , -NOTHING]) cylinder(d=3, h=flap_material_t+2*NOTHING);    }
 }
 
-flap_frame_side_servo();
+// OUTPUTS
+
+// LASER
+// projection() flap_frame_side_servo();
+projection() flap_frame_side_pot();
+
+// STL
+// flap_frame_side_servo();
+// flap_frame_side_pot();
+
